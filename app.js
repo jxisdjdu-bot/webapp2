@@ -71,6 +71,7 @@ function getQueryProfile() {
   if (params.has("profit")) profile.profit = params.get("profit");
   if (params.has("domains")) profile.domains = params.get("domains");
   if (params.has("users")) profile.usersCount = params.get("users");
+  if (params.has("registrations")) profile.usersCount = params.get("registrations");
   if (params.has("deposits")) profile.deposits = params.get("deposits");
   if (params.has("deposit_count")) profile.depositCount = params.get("deposit_count");
   if (params.has("active")) profile.activeCount = params.get("active");
@@ -147,7 +148,7 @@ function resolveProfileData() {
     balance: toNumber(profile.balance),
     profit: toNumber(profile.profit ?? profile.allTimeBalance),
     domains: resolveDomainCount(profile.domains ?? profile.domainCount),
-    usersCount: toNumber(profile.usersCount ?? profile.users ?? profile.referrals),
+    usersCount: toNumber(profile.usersCount ?? profile.registrations ?? profile.users ?? profile.referrals),
     deposits: toNumber(profile.deposits ?? profile.depositAmount ?? profile.depositsAmount),
     activeCount: toNumber(profile.activeCount ?? profile.onlineCount ?? profile.domains ?? profile.domainCount),
     balanceSeries: parseSeries(profile.balanceSeries ?? profile.balanceChart, profile.balance),
@@ -190,7 +191,7 @@ function resolveWebappProfileData() {
     balance: toNumber(profile.balance),
     profit: toNumber(profile.profit ?? profile.allTimeBalance),
     domains: resolveDomainCount(profile.domains ?? profile.domainCount),
-    usersCount: toNumber(profile.usersCount ?? profile.users ?? profile.referrals),
+    usersCount: toNumber(profile.usersCount ?? profile.registrations ?? profile.users ?? profile.referrals),
     deposits: toNumber(profile.deposits ?? profile.depositAmount ?? profile.depositsAmount),
     depositCount: toNumber(profile.depositCount),
     activeCount: toNumber(profile.activeCount ?? profile.onlineCount ?? profile.domains ?? profile.domainCount),
