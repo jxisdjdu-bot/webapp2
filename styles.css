@@ -406,6 +406,7 @@ body.home-mode .toc-panel {
   appearance: none;
   border: 1px solid #2a2d34;
   background: #101217;
+  opacity: 1;
   color: var(--on-surface);
   height: 40px;
   padding: 0 12px 0 14px;
@@ -452,10 +453,12 @@ body.home-mode .toc-panel {
   border-radius: 18px;
   border: 1px solid #30343d;
   background: #171a20;
+  opacity: 1;
   box-shadow: 0 18px 36px rgba(0, 0, 0, 0.38);
   display: grid;
   gap: 4px;
   z-index: 20;
+  isolation: isolate;
 }
 
 .chart-timeframe-select__menu[hidden] {

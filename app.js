@@ -389,22 +389,14 @@ function formatAxisValue(value) {
 }
 
 function renderChart(profile) {
-  const timeframeKey = profile.chartData?.[state.timeframe] ? state.timeframe : "all";
+  const hasExplicitTimeframe = Boolean(profile.chartData?.[state.timeframe]);
+  const timeframeKey = hasExplicitTimeframe ? state.timeframe : "all";
   const timeframe = profile.chartData?.[timeframeKey] || normalizeChartData(null, profile.balance, profile.profit).all;
   const resolvedBalance = Array.isArray(timeframe.balance) ? [...timeframe.balance] : buildChartFallbackSeries(profile.balance);
   const resolvedProfit = Array.isArray(timeframe.profit) ? [...timeframe.profit] : buildChartFallbackSeries(profile.deposits || profile.profit);
-
-  if (resolvedBalance.every((value) => toNumber(value) === 0) && profile.balance > 0) {
-    const fallback = buildChartFallbackSeries(profile.balance);
-    resolvedBalance.splice(0, resolvedBalance.length, ...fallback);
-  }
-
-  if (resolvedProfit.every((value) => toNumber(value) === 0) && (profile.deposits > 0 || profile.profit > 0)) {
-    const fallback = buildChartFallbackSeries(profile.deposits || profile.profit);
-    resolvedProfit.splice(0, resolvedProfit.length, ...fallback);
-  }
-
-  const maxValue = Math.max(1, ...resolvedBalance, ...resolvedProfit);
+  const hasAnyChartValue = [...resolvedBalance, ...resolvedProfit].some((value) => toNumber(value) > 0);
+  const axisMax = hasAnyChartValue ? Math.max(...resolvedBalance, ...resolvedProfit) : 0;
+  const plotMax = axisMax > 0 ? Math.max(1, axisMax * 1.18) : 1;
 
   if (ui.timeframeValue) {
     ui.timeframeValue.textContent = TIMEFRAME_LABELS[timeframeKey] || TIMEFRAME_LABELS.all;
@@ -419,11 +411,10 @@ function renderChart(profile) {
   }
 
   if (ui.chartGrid) {
-    ui.chartGrid.innerHTML = [
-      formatAxisValue(maxValue),
-      formatAxisValue(maxValue / 2),
-      "$0",
-    ].map((value) => `<span>${value}</span>`).join("");
+    const axisLabels = axisMax > 0
+      ? [formatAxisValue(plotMax), formatAxisValue(plotMax / 2), "$0"]
+      : ["$0", "$0", "$0"];
+    ui.chartGrid.innerHTML = axisLabels.map((value) => `<span>${value}</span>`).join("");
   }
 
   if (ui.chartMonths) {
@@ -431,8 +422,8 @@ function renderChart(profile) {
     ui.chartMonths.innerHTML = timeframe.labels.map((label) => `<span>${label}</span>`).join("");
   }
 
-  ui.chartBalanceLine.setAttribute("points", buildPolylinePoints(resolvedBalance, maxValue));
-  ui.chartProfitLine.setAttribute("points", buildPolylinePoints(resolvedProfit, maxValue));
+  ui.chartBalanceLine.setAttribute("points", buildPolylinePoints(resolvedBalance, plotMax));
+  ui.chartProfitLine.setAttribute("points", buildPolylinePoints(resolvedProfit, plotMax));
 }
 
 function updateHomeVisibility() {
