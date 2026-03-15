@@ -458,6 +458,10 @@ body.home-mode .toc-panel {
   z-index: 20;
 }
 
+.chart-timeframe-select__menu[hidden] {
+  display: none !important;
+}
+
 .chart-timeframe-select__option {
   appearance: none;
   border: 0;

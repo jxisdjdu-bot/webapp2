@@ -376,6 +376,11 @@ function buildPolylinePoints(values, maxValue = null) {
   }).join(" ");
 }
 
+function buildChartFallbackSeries(totalValue) {
+  const safeTotal = Math.max(0, toNumber(totalValue));
+  return [0, 0, 0, 0, 0, safeTotal];
+}
+
 function formatAxisValue(value) {
   if (value <= 0) return "$0";
   if (value >= 100) return `$${Math.round(value)}`;
@@ -386,7 +391,20 @@ function formatAxisValue(value) {
 function renderChart(profile) {
   const timeframeKey = profile.chartData?.[state.timeframe] ? state.timeframe : "all";
   const timeframe = profile.chartData?.[timeframeKey] || normalizeChartData(null, profile.balance, profile.profit).all;
-  const maxValue = Math.max(1, ...timeframe.balance, ...timeframe.profit);
+  const resolvedBalance = Array.isArray(timeframe.balance) ? [...timeframe.balance] : buildChartFallbackSeries(profile.balance);
+  const resolvedProfit = Array.isArray(timeframe.profit) ? [...timeframe.profit] : buildChartFallbackSeries(profile.deposits || profile.profit);
+
+  if (resolvedBalance.every((value) => toNumber(value) === 0) && profile.balance > 0) {
+    const fallback = buildChartFallbackSeries(profile.balance);
+    resolvedBalance.splice(0, resolvedBalance.length, ...fallback);
+  }
+
+  if (resolvedProfit.every((value) => toNumber(value) === 0) && (profile.deposits > 0 || profile.profit > 0)) {
+    const fallback = buildChartFallbackSeries(profile.deposits || profile.profit);
+    resolvedProfit.splice(0, resolvedProfit.length, ...fallback);
+  }
+
+  const maxValue = Math.max(1, ...resolvedBalance, ...resolvedProfit);
 
   if (ui.timeframeValue) {
     ui.timeframeValue.textContent = TIMEFRAME_LABELS[timeframeKey] || TIMEFRAME_LABELS.all;
@@ -413,8 +431,8 @@ function renderChart(profile) {
     ui.chartMonths.innerHTML = timeframe.labels.map((label) => `<span>${label}</span>`).join("");
   }
 
-  ui.chartBalanceLine.setAttribute("points", buildPolylinePoints(timeframe.balance, maxValue));
-  ui.chartProfitLine.setAttribute("points", buildPolylinePoints(timeframe.profit, maxValue));
+  ui.chartBalanceLine.setAttribute("points", buildPolylinePoints(resolvedBalance, maxValue));
+  ui.chartProfitLine.setAttribute("points", buildPolylinePoints(resolvedProfit, maxValue));
 }
 
 function updateHomeVisibility() {
@@ -1060,6 +1078,7 @@ function bindEvents() {
 function boot() {
   applyTheme();
   initTelegram();
+  closeTimeframeMenu();
   renderProfileSummary();
   ui.searchInput.value = state.query;
   renderChips();
