@@ -296,7 +296,7 @@ function normalizePromoName(value) {
     .trim()
     .toLowerCase()
     .replace(/\s+/g, "_")
-    .replace(/[^a-z0-9_]/g, "");
+    .replace(/[^\p{L}\p{N}_-]/gu, "");
 }
 
 function normalizePromoAmount(value) {
