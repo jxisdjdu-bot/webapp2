@@ -1,6 +1,6 @@
-﻿import { MANUALS } from "./manuals.js";
+import { MANUALS } from "./manuals.js";
 
-const ALL_CATEGORY = "Р’СЃРµ";
+const ALL_CATEGORY = "Все";
 
 const state = {
   query: "",
@@ -55,9 +55,9 @@ const PROMO_PAGE_ID = "promo";
 const DOMAIN_RE = /^(?!-)(?:[a-z0-9-]{1,63}\.)+[a-z]{2,63}$/i;
 const MANUALS_URL = "https://beverly-hills-2.gitbook.io/manual/";
 const TIMEFRAME_LABELS = {
-  all: "Р’СЃС‘ РІСЂРµРјСЏ",
-  month: "РњРµСЃСЏС†",
-  day: "Р”РµРЅСЊ",
+  all: "Всё время",
+  month: "Месяц",
+  day: "День",
 };
 
 function getTelegramUser() {
@@ -214,7 +214,7 @@ function resolveProfileData() {
     telegramUser.last_name,
   ].filter(Boolean).join(" ") || profile.displayName || telegramUser.username || profile.nickname || "Beverly User";
 
-  const username = telegramUser.username ? `@${telegramUser.username}` : "Р‘РµР· username";
+  const username = telegramUser.username ? `@${telegramUser.username}` : "Без username";
 
   return {
     displayName,
@@ -262,7 +262,7 @@ function resolveWebappProfileData() {
   const usernameValue = telegramUser.username || profile.tgUsername || profile.systemUsername || "";
   const balanceValue = toNumber(profile.balance);
   const profitValue = toNumber(profile.profit ?? profile.allTimeBalance);
-  const username = usernameValue ? (usernameValue.startsWith("@") ? usernameValue : `@${usernameValue}`) : "Р‘РµР· username";
+  const username = usernameValue ? (usernameValue.startsWith("@") ? usernameValue : `@${usernameValue}`) : "Без username";
 
   return {
     displayName,
@@ -329,7 +329,7 @@ function setPromoFormStatus(text, tone = "neutral") {
 function openBotDomainFlow(domain) {
   const tg = window.Telegram?.WebApp;
 
-  setDomainFormStatus("РћС‚РєСЂС‹РІР°РµРј Р±РѕС‚Р° Рё РїРµСЂРµРґР°С‘Рј РґРѕРјРµРЅ...", "success");
+  setDomainFormStatus("Открываем бота и передаём домен...", "success");
 
   if (tg?.sendData) {
     tg.sendData(JSON.stringify({
@@ -345,7 +345,7 @@ function openBotDomainFlow(domain) {
     return;
   }
 
-  setDomainFormStatus("РћС‚РєСЂРѕР№С‚Рµ mini app С‡РµСЂРµР· РєРЅРѕРїРєСѓ РџР°РЅРµР»СЊ РІ Р±РѕС‚Рµ.", "error");
+  setDomainFormStatus("Откройте mini app через кнопку Панель в боте.", "error");
 }
 
 function openManualsLink() {
@@ -517,7 +517,7 @@ function applyTheme() {
   ui.body.classList.toggle("theme-light", state.theme === "light");
   ui.themeToggle.innerHTML = `
     <span class="dock-button__icon material-symbols-rounded">${state.theme === "dark" ? "light_mode" : "dark_mode"}</span>
-    <span class="dock-button__label">${state.theme === "dark" ? "РЎРІРµС‚" : "РўСЊРјР°"}</span>
+    <span class="dock-button__label">${state.theme === "dark" ? "Свет" : "Тьма"}</span>
   `;
   document
     .querySelector('meta[name="theme-color"]')
@@ -616,8 +616,8 @@ function renderManualList() {
   if (!manuals.length) {
     ui.manualList.innerHTML = `
       <div class="manual-tile is-active">
-        <h3 class="manual-tile__title">РќРёС‡РµРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ</h3>
-        <p class="manual-tile__excerpt">РџРѕРїСЂРѕР±СѓР№С‚Рµ РґСЂСѓРіРѕР№ Р·Р°РїСЂРѕСЃ РёР»Рё РїРµСЂРµРєР»СЋС‡РёС‚Рµ СЂР°Р·РґРµР».</p>
+        <h3 class="manual-tile__title">Ничего не найдено</h3>
+        <p class="manual-tile__excerpt">Попробуйте другой запрос или переключите раздел.</p>
       </div>
     `;
     return;
@@ -657,35 +657,35 @@ function renderEmptyArticle() {
     <div class="article-badge-row">
       <div class="article-badge">
         <span class="material-symbols-rounded">search_off</span>
-        <span>РџСѓСЃС‚РѕР№ СЂРµР·СѓР»СЊС‚Р°С‚</span>
+        <span>Пустой результат</span>
       </div>
     </div>
-    <h2 class="article-title">РќРёС‡РµРіРѕ РЅРµ РїРѕРґРѕС€Р»Рѕ РїРѕРґ С‚РµРєСѓС‰РёР№ С„РёР»СЊС‚СЂ</h2>
-    <p class="article-lead">РЎР±СЂРѕСЃСЊС‚Рµ РїРѕРёСЃРє, СЃРјРµРЅРёС‚Рµ РєР°С‚РµРіРѕСЂРёСЋ РёР»Рё РѕС‚РєСЂРѕР№С‚Рµ СЃРѕСЃРµРґРЅРёР№ СЂР°Р·РґРµР» РёР· РЅР°РІРёРіР°С†РёРё СЃР»РµРІР°.</p>
+    <h2 class="article-title">Ничего не подошло под текущий фильтр</h2>
+    <p class="article-lead">Сбросьте поиск, смените категорию или откройте соседний раздел из навигации слева.</p>
   `;
 
   ui.articleBody.innerHTML = `
     <section class="section-block">
-      <h2>Р§С‚Рѕ РјРѕР¶РЅРѕ СЃРґРµР»Р°С‚СЊ</h2>
+      <h2>Что можно сделать</h2>
       <div class="check-list">
         <div class="check-item">
           <div class="check-icon"><span class="material-symbols-rounded">restart_alt</span></div>
-          <div>РћС‡РёСЃС‚РёС‚СЊ СЃС‚СЂРѕРєСѓ РїРѕРёСЃРєР° Рё РїРѕСЃРјРѕС‚СЂРµС‚СЊ РІРµСЃСЊ СЃРїРёСЃРѕРє РјР°С‚РµСЂРёР°Р»РѕРІ.</div>
+          <div>Очистить строку поиска и посмотреть весь список материалов.</div>
         </div>
         <div class="check-item">
           <div class="check-icon"><span class="material-symbols-rounded">tune</span></div>
-          <div>РЎРјРµРЅРёС‚СЊ РєР°С‚РµРіРѕСЂРёСЋ, РµСЃР»Рё С„РёР»СЊС‚СЂ РїРѕР»СѓС‡РёР»СЃСЏ СЃР»РёС€РєРѕРј СѓР·РєРёРј.</div>
+          <div>Сменить категорию, если фильтр получился слишком узким.</div>
         </div>
         <div class="check-item">
           <div class="check-icon"><span class="material-symbols-rounded">menu_book</span></div>
-          <div>Р”РѕР±Р°РІРёС‚СЊ РЅРѕРІС‹Р№ manual РІ <code>manuals.js</code>, РµСЃР»Рё С‚РµРјС‹ РґРµР№СЃС‚РІРёС‚РµР»СЊРЅРѕ РµС‰С‘ РЅРµС‚.</div>
+          <div>Добавить новый manual в <code>manuals.js</code>, если темы действительно ещё нет.</div>
         </div>
       </div>
     </section>
   `;
 
   ui.tocList.innerHTML = "";
-  ui.quickCard.innerHTML = "<h4>РџРѕРґСЃРєР°Р·РєР°</h4><p>Р‘Р°Р·Р° Р·РЅР°РЅРёР№ СѓР¶Рµ РѕС‚РґРµР»РµРЅР° РѕС‚ РёРЅС‚РµСЂС„РµР№СЃР°, РїРѕСЌС‚РѕРјСѓ РЅРѕРІС‹Рµ СЃС‚Р°С‚СЊРё РјРѕР¶РЅРѕ РґРѕР±Р°РІР»СЏС‚СЊ Р±РµР· РїРµСЂРµРїРёСЃС‹РІР°РЅРёСЏ shell.</p>";
+  ui.quickCard.innerHTML = "<h4>Подсказка</h4><p>База знаний уже отделена от интерфейса, поэтому новые статьи можно добавлять без переписывания shell.</p>";
   ui.articleFooter.innerHTML = "";
 }
 
@@ -727,8 +727,8 @@ function renderBlock(block) {
 
 function renderDomainsPage(manual) {
   ui.articleHeader.innerHTML = `
-    <h2 class="article-title">Р”РѕРјРµРЅС‹</h2>
-    <p class="article-lead">Р’РІРµРґРёС‚Рµ РґРѕРјРµРЅ Рё РЅР°Р¶РјРёС‚Рµ <b>Р”РѕР±Р°РІРёС‚СЊ</b>. Mini app Р·Р°РєСЂРѕРµС‚СЃСЏ, Р° Р±РѕС‚ РІ РѕР±С‹С‡РЅРѕРј С‡Р°С‚Рµ РѕС‚РїСЂР°РІРёС‚ NS-Р·Р°РїРёСЃРё РґР»СЏ СЌС‚РѕРіРѕ РґРѕРјРµРЅР°.</p>
+    <h2 class="article-title">Домены</h2>
+    <p class="article-lead">Введите домен и нажмите <b>Добавить</b>. Mini app закроется, а бот в обычном чате отправит NS-записи для этого домена.</p>
   `;
 
   ui.articleBody.innerHTML = `
@@ -738,13 +738,13 @@ function renderDomainsPage(manual) {
           <span class="material-symbols-rounded">language</span>
         </div>
         <div>
-          <h3>Р”РѕР±Р°РІРёС‚СЊ РґРѕРјРµРЅ</h3>
-          <p>РџРѕРґРґРµСЂР¶РёРІР°РµС‚СЃСЏ С„РѕСЂРјР°С‚ РІСЂРѕРґРµ <code>example.com</code></p>
+          <h3>Добавить домен</h3>
+          <p>Поддерживается формат вроде <code>example.com</code></p>
         </div>
       </div>
 
       <label class="domain-webapp-field">
-        <span>Р”РѕРјРµРЅ</span>
+        <span>Домен</span>
         <input
           id="domain-input"
           type="text"
@@ -752,17 +752,17 @@ function renderDomainsPage(manual) {
           autocomplete="off"
           autocapitalize="off"
           spellcheck="false"
-          placeholder="Р’РІРµРґРёС‚Рµ РґРѕРјРµРЅ, РєРѕС‚РѕСЂС‹Р№ С…РѕС‚РёС‚Рµ РґРѕР±Р°РІРёС‚СЊ"
+          placeholder="Введите домен, который хотите добавить"
         >
       </label>
 
       <button class="domain-webapp-submit" type="button" data-domain-submit>
-        <span>Р”РѕР±Р°РІРёС‚СЊ</span>
+        <span>Добавить</span>
       </button>
 
       <div class="domain-webapp-note">
-        <h3>Р’Р°Р¶РЅРѕ</h3>
-        <p>РџРѕСЃР»Рµ РґРѕР±Р°РІР»РµРЅРёСЏ РґРѕРјРµРЅР° РІС‹ РїРѕР»СѓС‡РёС‚Рµ NS СЃРµСЂРІРµСЂС‹, РєРѕС‚РѕСЂС‹Рµ РЅРµРѕР±С…РѕРґРёРјРѕ СѓРєР°Р·Р°С‚СЊ Сѓ РІР°С€РµРіРѕ РїСЂРѕРІР°Р№РґРµСЂР° РІРјРµСЃС‚Рѕ СЃС‚Р°СЂС‹С…. РџРѕСЃР»Рµ СѓСЃРїРµС€РЅРѕР№ СѓСЃС‚Р°РЅРѕРІРєРё NS СЃРµСЂРІРµСЂРѕРІ РІР°Рј Р±СѓРґРµС‚ РЅРµРѕР±С…РѕРґРёРјРѕ РЅР°Р¶Р°С‚СЊ РєРЅРѕРїРєСѓ "РџСЂРѕРІРµСЂРёС‚СЊ" РЅР° РЅСѓР¶РЅРѕРј РґРѕРјРµРЅРµ РІ С‚Р°Р±Р»РёС†Рµ. РџСЂРѕРІРµСЂРєР° РґРѕСЃС‚СѓРїРЅР° СЂР°Р· РІ 3 РјРёРЅСѓС‚С‹ Рё РЅРµРѕР±С…РѕРґРёРјР° РґР»СЏ РїРѕР»РЅРѕРіРѕ С„СѓРЅРєС†РёРѕРЅРёСЂРѕРІР°РЅРёСЏ РґРѕРјРµРЅР°.</p>
+        <h3>Важно</h3>
+        <p>После добавления домена вы получите NS серверы, которые необходимо указать у вашего провайдера вместо старых. После успешной установки NS серверов вам будет необходимо нажать кнопку "Проверить" на нужном домене в таблице. Проверка доступна раз в 3 минуты и необходима для полного функционирования домена.</p>
       </div>
 
       <p class="domain-webapp-status" data-domain-status data-tone="neutral" hidden></p>
@@ -777,7 +777,7 @@ function renderDomainsPage(manual) {
 function submitDomainViaWebApp(domain) {
   const tg = window.Telegram?.WebApp;
 
-  setDomainFormStatus("РћС‚РїСЂР°РІР»СЏРµРј РґРѕРјРµРЅ РІ Р±РѕС‚Р°...", "success");
+  setDomainFormStatus("Отправляем домен в бота...", "success");
 
   if (tg && typeof tg.sendData === "function") {
     tg.sendData(JSON.stringify({
@@ -788,13 +788,13 @@ function submitDomainViaWebApp(domain) {
     return;
   }
 
-  setDomainFormStatus("Telegram WebApp data РЅРµРґРѕСЃС‚СѓРїРЅР° РІ СЌС‚РѕР№ СЃСЂРµРґРµ.", "error");
+  setDomainFormStatus("Telegram WebApp data недоступна в этой среде.", "error");
 }
 
 function submitPromoViaWebApp(name, amount, shouldWager) {
   const tg = window.Telegram?.WebApp;
 
-  setPromoFormStatus("РћС‚РїСЂР°РІР»СЏРµРј РїСЂРѕРјРѕРєРѕРґ РІ Р±РѕС‚Р°...", "success");
+  setPromoFormStatus("Отправляем промокод в бота...", "success");
 
   if (tg && typeof tg.sendData === "function") {
     tg.sendData(JSON.stringify({
@@ -806,7 +806,7 @@ function submitPromoViaWebApp(name, amount, shouldWager) {
     return;
   }
 
-  setPromoFormStatus("Telegram WebApp data РЅРµРґРѕСЃС‚СѓРїРЅР° РІ СЌС‚РѕР№ СЃСЂРµРґРµ.", "error");
+  setPromoFormStatus("Telegram WebApp data недоступна в этой среде.", "error");
 }
 
 function renderDomainsPageCompact() {
@@ -818,12 +818,12 @@ function renderDomainsPageCompact() {
           <span class="material-symbols-rounded">language</span>
         </div>
         <div>
-          <h3>Р”РѕР±Р°РІРёС‚СЊ РґРѕРјРµРЅ</h3>
+          <h3>Добавить домен</h3>
         </div>
       </div>
 
       <label class="domain-webapp-field">
-        <span>Р”РѕРјРµРЅ</span>
+        <span>Домен</span>
         <input
           id="domain-input"
           type="text"
@@ -831,17 +831,17 @@ function renderDomainsPageCompact() {
           autocomplete="off"
           autocapitalize="off"
           spellcheck="false"
-          placeholder="Р’РІРµРґРёС‚Рµ РґРѕРјРµРЅ, РєРѕС‚РѕСЂС‹Р№ С…РѕС‚РёС‚Рµ РґРѕР±Р°РІРёС‚СЊ"
+          placeholder="Введите домен, который хотите добавить"
         >
       </label>
 
       <button class="domain-webapp-submit" type="button" data-domain-submit>
-        <span>Р”РѕР±Р°РІРёС‚СЊ</span>
+        <span>Добавить</span>
       </button>
 
       <div class="domain-webapp-note">
-        <h3>Р’Р°Р¶РЅРѕ</h3>
-        <p>РџРѕСЃР»Рµ РґРѕР±Р°РІР»РµРЅРёСЏ Р±РѕС‚ РѕС‚РїСЂР°РІРёС‚ NS СЃРµСЂРІРµСЂС‹, РєРѕС‚РѕСЂС‹Рµ РЅСѓР¶РЅРѕ СѓРєР°Р·Р°С‚СЊ Сѓ СЂРµРіРёСЃС‚СЂР°С‚РѕСЂР°. РџСЂРѕРІРµСЂРєСѓ РґРѕРјРµРЅР° РґР°Р»СЊС€Рµ РґРµР»Р°Р№С‚Рµ СѓР¶Рµ РІ СЃР°РјРѕРј Р±РѕС‚Рµ.</p>
+        <h3>Важно</h3>
+        <p>После добавления бот отправит NS серверы, которые нужно указать у регистратора. Проверку домена дальше делайте уже в самом боте.</p>
       </div>
 
       <p class="domain-webapp-status" data-domain-status data-tone="neutral" hidden></p>
@@ -861,12 +861,12 @@ function renderPromoPageCompact() {
           <span class="material-symbols-rounded">redeem</span>
         </div>
         <div>
-          <h3>РЎРѕР·РґР°С‚СЊ РїСЂРѕРјРѕРєРѕРґ</h3>
+          <h3>Создать промокод</h3>
         </div>
       </div>
 
       <label class="domain-webapp-field">
-        <span>РќР°Р·РІР°РЅРёРµ РїСЂРѕРјРѕРєРѕРґР°</span>
+        <span>Название промокода</span>
         <input
           id="promo-name-input"
           type="text"
@@ -874,31 +874,31 @@ function renderPromoPageCompact() {
           autocomplete="off"
           autocapitalize="off"
           spellcheck="false"
-          placeholder="Р’РІРµРґРёС‚Рµ РЅР°Р·РІР°РЅРёРµ РїСЂРѕРјРѕРєРѕРґР°"
+          placeholder="Введите название промокода"
         >
       </label>
 
       <label class="domain-webapp-field">
-        <span>РЎСѓРјРјР° РїСЂРѕРјРѕРєРѕРґР°</span>
+        <span>Сумма промокода</span>
         <input
           id="promo-amount-input"
           type="number"
           inputmode="decimal"
           min="1"
           step="1"
-          placeholder="Р’РІРµРґРёС‚Рµ СЃСѓРјРјСѓ"
+          placeholder="Введите сумму"
         >
       </label>
 
       <label class="promo-webapp-switch">
         <div class="promo-webapp-switch__copy">
-          <strong>РћС‚С‹РіСЂС‹С€ РІРєР»СЋС‡С‘РЅ</strong>
+          <strong>Отыгрыш включён</strong>
         </div>
         <input class="promo-webapp-toggle" id="promo-wager-input" type="checkbox" checked>
       </label>
 
       <button class="promo-webapp-submit" type="button" data-promo-submit disabled>
-        <span>РЎРѕР·РґР°С‚СЊ РїСЂРѕРјРѕРєРѕРґ</span>
+        <span>Создать промокод</span>
       </button>
 
       <p class="domain-webapp-status" data-promo-status data-tone="neutral" hidden></p>
@@ -928,8 +928,8 @@ function renderArticle(manual) {
     <h2 class="article-title">${manual.title}</h2>
     <p class="article-lead">${manual.lead}</p>
     <div class="article-meta-row">
-      <div class="article-meta"><span class="material-symbols-rounded">update</span><span>РћР±РЅРѕРІР»РµРЅРѕ ${manual.updatedAt}</span></div>
-      <div class="article-meta"><span class="material-symbols-rounded">article</span><span>${manual.sections.length} СЃРµРєС†РёРё</span></div>
+      <div class="article-meta"><span class="material-symbols-rounded">update</span><span>Обновлено ${manual.updatedAt}</span></div>
+      <div class="article-meta"><span class="material-symbols-rounded">article</span><span>${manual.sections.length} секции</span></div>
     </div>
   `;
 
@@ -947,7 +947,7 @@ function renderArticle(manual) {
     </a>
   `).join("");
 
-  ui.quickCard.innerHTML = `<h4>РљРѕСЂРѕС‚РєР°СЏ РјС‹СЃР»СЊ</h4><p>${manual.quickTip}</p>`;
+  ui.quickCard.innerHTML = `<h4>Короткая мысль</h4><p>${manual.quickTip}</p>`;
 
   const idx = MANUALS.findIndex((item) => item.id === manual.id);
   const prev = MANUALS[idx - 1];
@@ -955,11 +955,11 @@ function renderArticle(manual) {
 
   ui.articleFooter.innerHTML = `
     <button class="article-nav-card ${prev ? "" : "is-hidden"}" ${prev ? `data-manual-id="${prev.id}"` : ""}>
-      <p class="article-nav-card__label">РџСЂРµРґС‹РґСѓС‰РёР№ РјР°С‚РµСЂРёР°Р»</p>
+      <p class="article-nav-card__label">Предыдущий материал</p>
       <p class="article-nav-card__title">${prev?.title || ""}</p>
     </button>
     <button class="article-nav-card ${next ? "" : "is-hidden"}" ${next ? `data-manual-id="${next.id}"` : ""}>
-      <p class="article-nav-card__label">РЎР»РµРґСѓСЋС‰РёР№ РјР°С‚РµСЂРёР°Р»</p>
+      <p class="article-nav-card__label">Следующий материал</p>
       <p class="article-nav-card__title">${next?.title || ""}</p>
     </button>
   `;
@@ -1011,6 +1011,7 @@ function setActiveManual(id, pushHash = true) {
   if (pushHash) history.replaceState(null, "", `#${manual.id}`);
 
   const render = () => {
+    updateHomeVisibility();
     renderManualList();
     renderArticle(manual);
     updateHomeVisibility();
@@ -1059,13 +1060,13 @@ function bindEvents() {
       }
 
       if (!domain) {
-        setDomainFormStatus("Р’РІРµРґРёС‚Рµ РґРѕРјРµРЅ РїРµСЂРµРґ РѕС‚РїСЂР°РІРєРѕР№.", "error");
+        setDomainFormStatus("Введите домен перед отправкой.", "error");
         input?.focus();
         return;
       }
 
       if (!isValidDomain(domain)) {
-        setDomainFormStatus("Р”РѕРјРµРЅ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РІ С„РѕСЂРјР°С‚Рµ example.com.", "error");
+        setDomainFormStatus("Домен должен быть в формате example.com.", "error");
         input?.focus();
         return;
       }
@@ -1091,13 +1092,13 @@ function bindEvents() {
     }
 
     if (!promoName) {
-      setPromoFormStatus("Р’РІРµРґРёС‚Рµ РєРѕСЂСЂРµРєС‚РЅРѕРµ РЅР°Р·РІР°РЅРёРµ РїСЂРѕРјРѕРєРѕРґР°.", "error");
+      setPromoFormStatus("Введите корректное название промокода.", "error");
       nameInput?.focus();
       return;
     }
 
     if (!promoAmount) {
-      setPromoFormStatus("Р’РІРµРґРёС‚Рµ РєРѕСЂСЂРµРєС‚РЅСѓСЋ СЃСѓРјРјСѓ РїСЂРѕРјРѕРєРѕРґР°.", "error");
+      setPromoFormStatus("Введите корректную сумму промокода.", "error");
       amountInput?.focus();
       return;
     }
