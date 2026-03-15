@@ -216,13 +216,6 @@ function isValidDomain(value) {
   return DOMAIN_RE.test(value);
 }
 
-function encodeStartPayload(value) {
-  return btoa(value)
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/g, "");
-}
-
 function setDomainFormStatus(text, tone = "neutral") {
   const node = ui.articleBody.querySelector("[data-domain-status]");
   if (!node) return;
@@ -231,24 +224,25 @@ function setDomainFormStatus(text, tone = "neutral") {
 }
 
 function openBotDomainFlow(domain) {
-  const username = getBotUsername();
-  const encoded = encodeStartPayload(domain);
-  const url = `https://t.me/${username}?start=adddom_${encoded}`;
   const tg = window.Telegram?.WebApp;
 
   setDomainFormStatus("Открываем бота и передаём домен...", "success");
 
-  if (tg?.openTelegramLink) {
-    tg.openTelegramLink(url);
+  if (tg?.sendData) {
+    tg.sendData(JSON.stringify({
+      action: "add_domain",
+      domain,
+      web_version: "green",
+    }));
     window.setTimeout(() => {
       try {
         tg.close();
       } catch {}
-    }, 220);
+    }, 120);
     return;
   }
 
-  window.location.href = url;
+  setDomainFormStatus("Откройте mini app через кнопку Панель в боте.", "error");
 }
 
 function buildPolylinePoints(values) {

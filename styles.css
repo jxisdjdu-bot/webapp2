@@ -1,24 +1,24 @@
 :root {
   color-scheme: dark;
-  --primary: #9bbdff;
-  --on-primary: #07214e;
-  --primary-container: #15305f;
-  --on-primary-container: #d8e3ff;
-  --secondary: #bcc3d4;
-  --secondary-container: #1f2530;
-  --on-secondary-container: #e2e7f4;
+  --primary: #f0f1f4;
+  --on-primary: #090a0d;
+  --primary-container: #17191d;
+  --on-primary-container: #f3f5f8;
+  --secondary: #b6bcc8;
+  --secondary-container: #13151a;
+  --on-secondary-container: #edf1f8;
   --tertiary: #f0b489;
   --tertiary-container: #4d2d1b;
-  --surface: #050608;
-  --surface-low: #090b0f;
-  --surface-container: #0f1218;
-  --surface-high: #151922;
-  --surface-highest: #1c212b;
-  --surface-card: rgba(12, 14, 19, 0.9);
+  --surface: #030405;
+  --surface-low: #070809;
+  --surface-container: #0b0d10;
+  --surface-high: #101216;
+  --surface-highest: #15181d;
+  --surface-card: rgba(7, 8, 10, 0.94);
   --on-surface: #f1f3f8;
   --on-surface-variant: #9ca4b5;
-  --outline: #677085;
-  --outline-variant: #242934;
+  --outline: #5f6674;
+  --outline-variant: #1c2027;
   --shadow: rgba(0, 0, 0, 0.34);
   --scrim: rgba(0, 0, 0, 0.58);
 
@@ -677,7 +677,7 @@ body.home-mode .toc-panel {
 }
 
 .article-shell__header {
-  padding: clamp(22px, 3vw, 32px);
+  padding: clamp(16px, 2.2vw, 22px);
   background: var(--surface-high);
   border-bottom: 1px solid color-mix(in srgb, var(--outline-variant) 66%, transparent);
 }
@@ -705,17 +705,17 @@ body.home-mode .toc-panel {
 }
 
 .article-title {
-  margin: 14px 0 12px;
-  font-size: clamp(1.84rem, 3.5vw, 2.88rem);
+  margin: 8px 0 8px;
+  font-size: clamp(1.56rem, 2.8vw, 2.24rem);
   line-height: 0.98;
   letter-spacing: -0.04em;
 }
 
 .article-lead {
-  max-width: 68ch;
-  margin: 0 0 18px;
-  font-size: clamp(0.98rem, 1.2vw, 1.08rem);
-  line-height: 1.64;
+  max-width: 62ch;
+  margin: 0 0 10px;
+  font-size: clamp(0.94rem, 1.05vw, 1rem);
+  line-height: 1.5;
   color: var(--on-surface-variant);
 }
 
@@ -731,7 +731,7 @@ body.home-mode .toc-panel {
 }
 
 .article-body {
-  padding: 20px clamp(16px, 3vw, 32px) 10px;
+  padding: 14px clamp(14px, 2.2vw, 22px) 10px;
 }
 
 .section-block {
@@ -745,9 +745,9 @@ body.home-mode .toc-panel {
 
 .domain-webapp-card,
 .domain-webapp-note {
-  padding: 18px;
-  margin-bottom: 14px;
-  border-radius: 18px;
+  padding: 14px;
+  margin-bottom: 12px;
+  border-radius: 16px;
   border: 1px solid color-mix(in srgb, var(--outline-variant) 66%, transparent);
   background: var(--surface-low);
   animation: rise-in var(--duration-long) var(--motion-decelerate) both;
@@ -755,22 +755,22 @@ body.home-mode .toc-panel {
 
 .domain-webapp-card {
   display: grid;
-  gap: 16px;
+  gap: 12px;
 }
 
 .domain-webapp-card__head {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 14px;
+  gap: 12px;
   align-items: start;
 }
 
 .domain-webapp-card__icon {
-  width: 44px;
-  height: 44px;
+  width: 38px;
+  height: 38px;
   display: grid;
   place-items: center;
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--surface-high);
   color: var(--primary);
 }
@@ -778,7 +778,7 @@ body.home-mode .toc-panel {
 .domain-webapp-card__head h3,
 .domain-webapp-note h3 {
   margin: 0 0 6px;
-  font-size: 1.08rem;
+  font-size: 1rem;
   line-height: 1.12;
 }
 
@@ -786,12 +786,12 @@ body.home-mode .toc-panel {
 .domain-webapp-note p {
   margin: 0;
   color: var(--on-surface-variant);
-  line-height: 1.6;
+  line-height: 1.5;
 }
 
 .domain-webapp-field {
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .domain-webapp-field span {
@@ -802,9 +802,9 @@ body.home-mode .toc-panel {
 
 .domain-webapp-field input {
   width: 100%;
-  height: 54px;
-  padding: 0 16px;
-  border-radius: 16px;
+  height: 48px;
+  padding: 0 14px;
+  border-radius: 14px;
   border: 1px solid color-mix(in srgb, var(--outline-variant) 78%, transparent);
   background: var(--surface);
   color: var(--on-surface);
@@ -819,9 +819,9 @@ body.home-mode .toc-panel {
 }
 
 .domain-webapp-submit {
-  height: 54px;
+  height: 48px;
   border: 0;
-  border-radius: 16px;
+  border-radius: 14px;
   background: var(--primary);
   color: var(--on-primary);
   display: inline-flex;
