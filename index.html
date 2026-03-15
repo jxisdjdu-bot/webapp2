@@ -94,10 +94,15 @@
                 <span class="material-symbols-rounded">insert_chart</span>
                 <span>Статистика</span>
               </div>
-              <button class="chart-card__filter" type="button">
+              <label class="chart-card__filter chart-card__filter--select">
+                <select id="chart-timeframe-select" aria-label="Период статистики">
+                  <option value="all">Всё время</option>
+                  <option value="month">Месяц</option>
+                  <option value="day">День</option>
+                </select>
                 <span>Всё время</span>
                 <span class="material-symbols-rounded">expand_more</span>
-              </button>
+              </label>
             </div>
 
             <div class="chart-legend">
@@ -112,7 +117,7 @@
             </div>
 
             <div class="chart-shell">
-              <div class="chart-grid">
+              <div class="chart-grid" id="chart-grid">
                 <span>$2</span>
                 <span>$1</span>
                 <span>$0</span>
@@ -206,6 +211,7 @@
     <div class="scrim" id="scrim" hidden></div>
   </div>
 
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <script type="module" src="./app.js"></script>
 </body>
 </html>

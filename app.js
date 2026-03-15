@@ -7,6 +7,7 @@ const state = {
   category: ALL_CATEGORY,
   activeId: location.hash.replace(/^#\/?/, "") || MANUALS[0].id,
   theme: localStorage.getItem("beverly-webapp-theme") || "dark",
+  timeframe: localStorage.getItem("beverly-webapp-timeframe") || "all",
   navOpen: false,
 };
 
@@ -25,8 +26,10 @@ const ui = {
   statBalance: document.getElementById("stat-balance"),
   statProfit: document.getElementById("stat-profit"),
   statDomains: document.getElementById("stat-domains"),
+  chartGrid: document.getElementById("chart-grid"),
   chartBalanceLine: document.getElementById("chart-balance-line"),
   chartProfitLine: document.getElementById("chart-profit-line"),
+  chartMonths: document.getElementById("chart-months"),
   categoryChips: document.getElementById("category-chips"),
   manualList: document.getElementById("manual-list"),
   articleHeader: document.getElementById("article-header"),
@@ -37,6 +40,7 @@ const ui = {
   progressBar: document.getElementById("article-progress-bar"),
   searchInput: document.getElementById("search-input"),
   themeToggle: document.getElementById("theme-toggle"),
+  timeframeSelect: document.getElementById("chart-timeframe-select"),
   navToggle: document.getElementById("nav-toggle"),
   navClose: document.getElementById("nav-close"),
   bottomDock: document.querySelector(".bottom-dock"),
@@ -62,6 +66,7 @@ function getQueryProfile() {
   const params = new URLSearchParams(window.location.search);
   const profile = {};
 
+  if (params.has("s")) profile.stats = decodeCompactJson(params.get("s"));
   if (params.has("u")) profile.tgUsername = params.get("u");
   if (params.has("n")) profile.displayName = params.get("n");
   if (params.has("b")) profile.balance = params.get("b");
@@ -86,6 +91,19 @@ function getQueryProfile() {
   if (params.has("active")) profile.activeCount = params.get("active");
 
   return profile;
+}
+
+function decodeCompactJson(value) {
+  if (!value) return null;
+  try {
+    const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized + "=".repeat((4 - (normalized.length % 4)) % 4);
+    const binary = atob(padded);
+    const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+    return JSON.parse(new TextDecoder().decode(bytes));
+  } catch {
+    return null;
+  }
 }
 
 function toNumber(value) {
@@ -132,6 +150,44 @@ function parseSeries(value, fallbackValue = 0) {
   return [0, 0, 0, 0, 0, toNumber(fallbackValue)];
 }
 
+function getDefaultLabels(type) {
+  const now = new Date();
+  if (type === "day") {
+    return Array.from({ length: 6 }, (_, index) => {
+      const point = new Date(now.getTime() - ((5 - index) * 4 * 60 * 60 * 1000));
+      return point.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+    });
+  }
+
+  if (type === "month") {
+    return Array.from({ length: 6 }, (_, index) => {
+      const point = new Date(now.getTime() - ((5 - index) * 5 * 24 * 60 * 60 * 1000));
+      return point.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
+    });
+  }
+
+  return Array.from({ length: 6 }, (_, index) => {
+    const point = new Date(now.getFullYear(), now.getMonth() - (5 - index), 1);
+    return point.toLocaleDateString("ru-RU", { month: "short" }).replace(".", "");
+  });
+}
+
+function normalizeChartEntry(entry, fallbackBalance, fallbackProfit, fallbackLabels) {
+  return {
+    labels: Array.isArray(entry?.l) && entry.l.length ? entry.l.slice(0, 6) : fallbackLabels,
+    balance: parseSeries(entry?.b, fallbackBalance),
+    profit: parseSeries(entry?.p, fallbackProfit),
+  };
+}
+
+function normalizeChartData(rawStats, fallbackBalance, fallbackProfit) {
+  return {
+    all: normalizeChartEntry(rawStats?.a || rawStats?.all, fallbackBalance, fallbackProfit, getDefaultLabels("all")),
+    month: normalizeChartEntry(rawStats?.m || rawStats?.month, fallbackBalance, fallbackProfit, getDefaultLabels("month")),
+    day: normalizeChartEntry(rawStats?.d || rawStats?.day, fallbackBalance, fallbackProfit, getDefaultLabels("day")),
+  };
+}
+
 function resolveProfileData() {
   const telegramUser = getTelegramUser();
   const injectedProfile = window.BEVERLY_PROFILE || {};
@@ -160,8 +216,11 @@ function resolveProfileData() {
     usersCount: toNumber(profile.usersCount ?? profile.registrations ?? profile.users ?? profile.referrals),
     deposits: toNumber(profile.deposits ?? profile.depositAmount ?? profile.depositsAmount),
     activeCount: toNumber(profile.activeCount ?? profile.onlineCount ?? profile.domains ?? profile.domainCount),
-    balanceSeries: parseSeries(profile.balanceSeries ?? profile.balanceChart, profile.balance),
-    profitSeries: parseSeries(profile.profitSeries ?? profile.profitChart, profile.profit),
+    chartData: normalizeChartData(
+      profile.stats ?? profile.chartData,
+      toNumber(profile.balance),
+      toNumber(profile.profit ?? profile.allTimeBalance),
+    ),
   };
 }
 
@@ -191,21 +250,22 @@ function resolveWebappProfileData() {
   ].filter(Boolean).join(" ") || profile.displayName || profile.systemUsername || telegramUser.username || profile.tgUsername || profile.nickname || "Beverly User";
 
   const usernameValue = telegramUser.username || profile.tgUsername || profile.systemUsername || "";
+  const balanceValue = toNumber(profile.balance);
+  const profitValue = toNumber(profile.profit ?? profile.allTimeBalance);
   const username = usernameValue ? (usernameValue.startsWith("@") ? usernameValue : `@${usernameValue}`) : "Без username";
 
   return {
     displayName,
     username,
     photoUrl: telegramUser.photo_url || profile.photoUrl || "",
-    balance: toNumber(profile.balance),
-    profit: toNumber(profile.profit ?? profile.allTimeBalance),
+    balance: balanceValue,
+    profit: profitValue,
     domains: resolveDomainCount(profile.domains ?? profile.domainCount),
     usersCount: toNumber(profile.usersCount ?? profile.registrations ?? profile.users ?? profile.referrals),
     deposits: toNumber(profile.deposits ?? profile.depositAmount ?? profile.depositsAmount),
     depositCount: toNumber(profile.depositCount),
     activeCount: toNumber(profile.activeCount ?? profile.onlineCount ?? profile.domains ?? profile.domainCount),
-    balanceSeries: parseSeries(profile.balanceSeries ?? profile.balanceChart, profile.balance),
-    profitSeries: parseSeries(profile.profitSeries ?? profile.profitChart, profile.profit),
+    chartData: normalizeChartData(profile.stats ?? profile.chartData, balanceValue, profitValue),
   };
 }
 
@@ -254,20 +314,53 @@ function openBotDomainFlow(domain) {
   setDomainFormStatus("Откройте mini app через кнопку Панель в боте.", "error");
 }
 
-function buildPolylinePoints(values) {
+function buildPolylinePoints(values, maxValue = null) {
   const width = 320;
-  const height = 180;
   const top = 20;
   const bottom = 160;
   const left = 0;
   const right = width;
-  const maxValue = Math.max(1, ...values);
+  const chartValues = values.length === 1 ? [values[0], values[0]] : values;
+  const resolvedMaxValue = Math.max(1, ...(maxValue ? [maxValue] : chartValues));
 
-  return values.map((value, index) => {
-    const x = left + (right - left) * (index / Math.max(1, values.length - 1));
-    const y = bottom - ((value / maxValue) * (bottom - top));
+  return chartValues.map((value, index) => {
+    const x = left + (right - left) * (index / Math.max(1, chartValues.length - 1));
+    const y = bottom - ((value / resolvedMaxValue) * (bottom - top));
     return `${x.toFixed(2)},${y.toFixed(2)}`;
   }).join(" ");
+}
+
+function formatAxisValue(value) {
+  if (value <= 0) return "$0";
+  if (value >= 100) return `$${Math.round(value)}`;
+  if (value >= 10) return `$${value.toFixed(0)}`;
+  return `$${value.toFixed(2).replace(/\.00$/, "")}`;
+}
+
+function renderChart(profile) {
+  const timeframeKey = profile.chartData?.[state.timeframe] ? state.timeframe : "all";
+  const timeframe = profile.chartData?.[timeframeKey] || normalizeChartData(null, profile.balance, profile.profit).all;
+  const maxValue = Math.max(1, ...timeframe.balance, ...timeframe.profit);
+
+  if (ui.timeframeSelect) {
+    ui.timeframeSelect.value = timeframeKey;
+  }
+
+  if (ui.chartGrid) {
+    ui.chartGrid.innerHTML = [
+      formatAxisValue(maxValue),
+      formatAxisValue(maxValue / 2),
+      "$0",
+    ].map((value) => `<span>${value}</span>`).join("");
+  }
+
+  if (ui.chartMonths) {
+    ui.chartMonths.style.gridTemplateColumns = `repeat(${Math.max(1, timeframe.labels.length)}, minmax(0, 1fr))`;
+    ui.chartMonths.innerHTML = timeframe.labels.map((label) => `<span>${label}</span>`).join("");
+  }
+
+  ui.chartBalanceLine.setAttribute("points", buildPolylinePoints(timeframe.balance, maxValue));
+  ui.chartProfitLine.setAttribute("points", buildPolylinePoints(timeframe.profit, maxValue));
 }
 
 function updateHomeVisibility() {
@@ -329,8 +422,7 @@ function renderProfileSummary() {
   ui.statBalance.textContent = formatMoney(profile.balance);
   ui.statProfit.textContent = formatMoney(profile.profit);
   ui.statDomains.textContent = String(profile.domains);
-  ui.chartBalanceLine.setAttribute("points", buildPolylinePoints(profile.balanceSeries));
-  ui.chartProfitLine.setAttribute("points", buildPolylinePoints(profile.profitSeries));
+  renderChart(profile);
 }
 
 function applyTheme() {
@@ -834,6 +926,12 @@ function bindEvents() {
   ui.searchInput.addEventListener("input", (event) => {
     state.query = event.target.value;
     syncArticleToFilters();
+  });
+
+  ui.timeframeSelect?.addEventListener("change", (event) => {
+    state.timeframe = event.target.value;
+    localStorage.setItem("beverly-webapp-timeframe", state.timeframe);
+    renderProfileSummary();
   });
 
   ui.navClose.addEventListener("click", closeNav);

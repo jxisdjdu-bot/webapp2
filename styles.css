@@ -409,6 +409,27 @@ body.home-mode .toc-panel {
   font: inherit;
 }
 
+.chart-card__filter--select {
+  position: relative;
+  cursor: pointer;
+}
+
+.chart-card__filter--select > span:not(.material-symbols-rounded) {
+  display: none;
+}
+
+.chart-card__filter--select select {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 0 18px 0 0;
+  cursor: pointer;
+}
+
 .chart-legend {
   display: flex;
   flex-wrap: wrap;
