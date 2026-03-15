@@ -62,12 +62,17 @@ function getQueryProfile() {
   const params = new URLSearchParams(window.location.search);
   const profile = {};
 
+  if (params.has("user_id")) profile.userId = params.get("user_id");
+  if (params.has("tg_username")) profile.tgUsername = params.get("tg_username");
+  if (params.has("display_name")) profile.displayName = params.get("display_name");
+  if (params.has("system_username")) profile.systemUsername = params.get("system_username");
   if (params.has("nickname")) profile.nickname = params.get("nickname");
   if (params.has("balance")) profile.balance = params.get("balance");
   if (params.has("profit")) profile.profit = params.get("profit");
   if (params.has("domains")) profile.domains = params.get("domains");
   if (params.has("users")) profile.usersCount = params.get("users");
   if (params.has("deposits")) profile.deposits = params.get("deposits");
+  if (params.has("deposit_count")) profile.depositCount = params.get("deposit_count");
   if (params.has("active")) profile.activeCount = params.get("active");
 
   return profile;
@@ -157,6 +162,41 @@ function getBotUsername() {
     window.BEVERLY_BOT_USERNAME ||
     "BeverlyWorkBot"
   ).replace(/^@+/, "");
+}
+
+function resolveWebappProfileData() {
+  const telegramUser = getTelegramUser();
+  const injectedProfile = window.BEVERLY_PROFILE || {};
+  const storedProfile = getStoredProfile();
+  const queryProfile = getQueryProfile();
+  const profile = { ...storedProfile, ...queryProfile, ...injectedProfile };
+
+  if (Object.keys(queryProfile).length || Object.keys(injectedProfile).length) {
+    localStorage.setItem("beverly-webapp-profile", JSON.stringify(profile));
+  }
+
+  const displayName = [
+    telegramUser.first_name,
+    telegramUser.last_name,
+  ].filter(Boolean).join(" ") || profile.displayName || profile.systemUsername || telegramUser.username || profile.tgUsername || profile.nickname || "Beverly User";
+
+  const usernameValue = telegramUser.username || profile.tgUsername || profile.systemUsername || "";
+  const username = usernameValue ? (usernameValue.startsWith("@") ? usernameValue : `@${usernameValue}`) : "Без username";
+
+  return {
+    displayName,
+    username,
+    photoUrl: telegramUser.photo_url || profile.photoUrl || "",
+    balance: toNumber(profile.balance),
+    profit: toNumber(profile.profit ?? profile.allTimeBalance),
+    domains: resolveDomainCount(profile.domains ?? profile.domainCount),
+    usersCount: toNumber(profile.usersCount ?? profile.users ?? profile.referrals),
+    deposits: toNumber(profile.deposits ?? profile.depositAmount ?? profile.depositsAmount),
+    depositCount: toNumber(profile.depositCount),
+    activeCount: toNumber(profile.activeCount ?? profile.onlineCount ?? profile.domains ?? profile.domainCount),
+    balanceSeries: parseSeries(profile.balanceSeries ?? profile.balanceChart, profile.balance),
+    profitSeries: parseSeries(profile.profitSeries ?? profile.profitChart, profile.profit),
+  };
 }
 
 function normalizeDomainInput(value) {
@@ -261,7 +301,7 @@ function updateHomeVisibility() {
 }
 
 function renderProfileSummary() {
-  const profile = resolveProfileData();
+  const profile = resolveWebappProfileData();
   const initials = (profile.username || "BU")
     .split(" ")
     .filter(Boolean)
