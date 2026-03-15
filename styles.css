@@ -404,8 +404,8 @@ body.home-mode .toc-panel {
 .chart-timeframe-select__trigger {
   width: 100%;
   appearance: none;
-  border: 1px solid color-mix(in srgb, var(--outline-variant) 72%, transparent);
-  background: color-mix(in srgb, var(--surface-high) 82%, #000 18%);
+  border: 1px solid #2a2d34;
+  background: #101217;
   color: var(--on-surface);
   height: 40px;
   padding: 0 12px 0 14px;
@@ -424,8 +424,8 @@ body.home-mode .toc-panel {
 }
 
 .chart-timeframe-select__trigger:hover {
-  border-color: color-mix(in srgb, var(--primary) 38%, var(--outline-variant));
-  background: color-mix(in srgb, var(--surface-bright) 18%, #000 82%);
+  border-color: #383d47;
+  background: #141720;
 }
 
 .chart-timeframe-select__trigger .material-symbols-rounded {
@@ -450,8 +450,8 @@ body.home-mode .toc-panel {
   min-width: 100%;
   padding: 6px;
   border-radius: 18px;
-  border: 1px solid color-mix(in srgb, var(--outline-variant) 72%, transparent);
-  background: color-mix(in srgb, var(--surface-container-high) 88%, #000 12%);
+  border: 1px solid #30343d;
+  background: #171a20;
   box-shadow: 0 18px 36px rgba(0, 0, 0, 0.38);
   display: grid;
   gap: 4px;
