@@ -62,6 +62,15 @@ function getQueryProfile() {
   const params = new URLSearchParams(window.location.search);
   const profile = {};
 
+  if (params.has("u")) profile.tgUsername = params.get("u");
+  if (params.has("n")) profile.displayName = params.get("n");
+  if (params.has("b")) profile.balance = params.get("b");
+  if (params.has("p")) profile.profit = params.get("p");
+  if (params.has("d")) profile.domains = params.get("d");
+  if (params.has("r")) profile.usersCount = params.get("r");
+  if (params.has("m")) profile.deposits = params.get("m");
+  if (params.has("mc")) profile.depositCount = params.get("mc");
+
   if (params.has("user_id")) profile.userId = params.get("user_id");
   if (params.has("tg_username")) profile.tgUsername = params.get("tg_username");
   if (params.has("display_name")) profile.displayName = params.get("display_name");
