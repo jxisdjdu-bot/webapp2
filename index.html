@@ -94,15 +94,11 @@
                 <span class="material-symbols-rounded">insert_chart</span>
                 <span>Статистика</span>
               </div>
-              <label class="chart-card__filter chart-card__filter--select">
-                <select id="chart-timeframe-select" aria-label="Период статистики">
-                  <option value="all">Всё время</option>
-                  <option value="month">Месяц</option>
-                  <option value="day">День</option>
-                </select>
-                <span>Всё время</span>
-                <span class="material-symbols-rounded">expand_more</span>
-              </label>
+              <div class="chart-timeframe" id="chart-timeframe" role="tablist" aria-label="Период статистики">
+                <button class="chart-timeframe__button" type="button" data-timeframe="all">Всё время</button>
+                <button class="chart-timeframe__button" type="button" data-timeframe="month">Месяц</button>
+                <button class="chart-timeframe__button" type="button" data-timeframe="day">День</button>
+              </div>
             </div>
 
             <div class="chart-legend">
@@ -185,9 +181,9 @@
 
     <nav class="bottom-dock" aria-label="Основная навигация">
       <div class="bottom-dock__pill">
-        <button class="dock-button" id="nav-toggle" type="button" aria-label="Открыть меню" aria-expanded="false" aria-controls="nav-panel" data-dock-action="menu">
-          <span class="dock-button__icon material-symbols-rounded">menu</span>
-          <span class="dock-button__label">Меню</span>
+        <button class="dock-button" id="nav-toggle" type="button" aria-label="Открыть мануалы" data-dock-action="manuals-link">
+          <span class="dock-button__icon material-symbols-rounded">menu_book</span>
+          <span class="dock-button__label">Мануалы</span>
         </button>
         <button class="dock-button" type="button" data-dock-manual="promo">
           <span class="dock-button__icon material-symbols-rounded">redeem</span>

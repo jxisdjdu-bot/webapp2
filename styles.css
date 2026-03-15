@@ -396,38 +396,48 @@ body.home-mode .toc-panel {
   font-weight: 700;
 }
 
-.chart-card__filter {
+.chart-timeframe {
+  display: inline-grid;
+  grid-template-columns: repeat(3, minmax(0, auto));
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
   border: 1px solid color-mix(in srgb, var(--outline-variant) 72%, transparent);
-  background: var(--surface-high);
-  color: var(--on-surface);
-  height: 40px;
+  background: color-mix(in srgb, var(--surface-high) 78%, #000 22%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 4%, transparent);
+}
+
+.chart-timeframe__button {
+  appearance: none;
+  border: 0;
+  min-width: 0;
+  height: 34px;
   padding: 0 12px;
   border-radius: 999px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font: inherit;
-}
-
-.chart-card__filter--select {
-  position: relative;
-  cursor: pointer;
-}
-
-.chart-card__filter--select > span:not(.material-symbols-rounded) {
-  display: none;
-}
-
-.chart-card__filter--select select {
-  appearance: none;
-  -webkit-appearance: none;
-  border: 0;
-  outline: 0;
   background: transparent;
-  color: inherit;
+  color: var(--on-surface-variant);
   font: inherit;
-  padding: 0 18px 0 0;
+  font-size: 0.84rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
   cursor: pointer;
+  transition: background-color 180ms ease, color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+.chart-timeframe__button:hover {
+  color: var(--on-surface);
+  background: color-mix(in srgb, var(--surface-bright) 50%, transparent);
+}
+
+.chart-timeframe__button.is-active {
+  background: color-mix(in srgb, var(--primary) 18%, #fff 6%);
+  color: var(--on-surface);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 34%, transparent);
+}
+
+.chart-timeframe__button:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary) 74%, white 10%);
+  outline-offset: 2px;
 }
 
 .chart-legend {
@@ -1278,8 +1288,14 @@ body.nav-open {
     flex-direction: column;
   }
 
-  .chart-card__filter {
-    height: 40px;
+  .chart-timeframe {
+    width: 100%;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .chart-timeframe__button {
+    height: 36px;
+    padding: 0 10px;
   }
 
   .stats-strip {

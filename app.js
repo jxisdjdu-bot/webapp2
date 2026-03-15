@@ -40,7 +40,7 @@ const ui = {
   progressBar: document.getElementById("article-progress-bar"),
   searchInput: document.getElementById("search-input"),
   themeToggle: document.getElementById("theme-toggle"),
-  timeframeSelect: document.getElementById("chart-timeframe-select"),
+  timeframeSwitcher: document.getElementById("chart-timeframe"),
   navToggle: document.getElementById("nav-toggle"),
   navClose: document.getElementById("nav-close"),
   bottomDock: document.querySelector(".bottom-dock"),
@@ -314,6 +314,18 @@ function openBotDomainFlow(domain) {
   setDomainFormStatus("Откройте mini app через кнопку Панель в боте.", "error");
 }
 
+function openManualsLink() {
+  const url = "https://beverly-hills-2.gitbook.io/manual/";
+  const tg = window.Telegram?.WebApp;
+
+  if (tg?.openLink) {
+    tg.openLink(url);
+    return;
+  }
+
+  window.location.href = url;
+}
+
 function buildPolylinePoints(values, maxValue = null) {
   const width = 320;
   const top = 20;
@@ -342,8 +354,12 @@ function renderChart(profile) {
   const timeframe = profile.chartData?.[timeframeKey] || normalizeChartData(null, profile.balance, profile.profit).all;
   const maxValue = Math.max(1, ...timeframe.balance, ...timeframe.profit);
 
-  if (ui.timeframeSelect) {
-    ui.timeframeSelect.value = timeframeKey;
+  if (ui.timeframeSwitcher) {
+    ui.timeframeSwitcher.querySelectorAll("[data-timeframe]").forEach((button) => {
+      const isActive = button.dataset.timeframe === timeframeKey;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", isActive ? "true" : "false");
+    });
   }
 
   if (ui.chartGrid) {
@@ -928,8 +944,10 @@ function bindEvents() {
     syncArticleToFilters();
   });
 
-  ui.timeframeSelect?.addEventListener("change", (event) => {
-    state.timeframe = event.target.value;
+  ui.timeframeSwitcher?.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-timeframe]");
+    if (!button) return;
+    state.timeframe = button.dataset.timeframe;
     localStorage.setItem("beverly-webapp-timeframe", state.timeframe);
     renderProfileSummary();
   });
@@ -950,8 +968,8 @@ function bindEvents() {
     const actionButton = event.target.closest("[data-dock-action]");
     if (!actionButton) return;
 
-    if (actionButton.dataset.dockAction === "menu") {
-      toggleNav();
+    if (actionButton.dataset.dockAction === "manuals-link") {
+      openManualsLink();
       return;
     }
 
