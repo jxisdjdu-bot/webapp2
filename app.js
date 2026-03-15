@@ -43,6 +43,8 @@ const ui = {
 };
 
 const categories = [ALL_CATEGORY, ...new Set(MANUALS.map((item) => item.category))];
+const DOMAIN_PAGE_ID = "domains";
+const DOMAIN_RE = /^(?!-)(?:[a-z0-9-]{1,63}\.)+[a-z]{2,63}$/i;
 
 function getTelegramUser() {
   return window.Telegram?.WebApp?.initDataUnsafe?.user || {};
@@ -148,6 +150,66 @@ function resolveProfileData() {
   };
 }
 
+function getBotUsername() {
+  const params = new URLSearchParams(window.location.search);
+  return (
+    params.get("bot") ||
+    window.BEVERLY_BOT_USERNAME ||
+    "BeverlyWorkBot"
+  ).replace(/^@+/, "");
+}
+
+function normalizeDomainInput(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/^www\./, "")
+    .split("/")[0]
+    .split("?")[0]
+    .split("#")[0]
+    .replace(/\.+$/, "");
+}
+
+function isValidDomain(value) {
+  return DOMAIN_RE.test(value);
+}
+
+function encodeStartPayload(value) {
+  return btoa(value)
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/g, "");
+}
+
+function setDomainFormStatus(text, tone = "neutral") {
+  const node = ui.articleBody.querySelector("[data-domain-status]");
+  if (!node) return;
+  node.textContent = text;
+  node.dataset.tone = tone;
+}
+
+function openBotDomainFlow(domain) {
+  const username = getBotUsername();
+  const encoded = encodeStartPayload(domain);
+  const url = `https://t.me/${username}?start=adddom_${encoded}`;
+  const tg = window.Telegram?.WebApp;
+
+  setDomainFormStatus("Открываем бота и передаём домен...", "success");
+
+  if (tg?.openTelegramLink) {
+    tg.openTelegramLink(url);
+    window.setTimeout(() => {
+      try {
+        tg.close();
+      } catch {}
+    }, 220);
+    return;
+  }
+
+  window.location.href = url;
+}
+
 function buildPolylinePoints(values) {
   const width = 320;
   const height = 180;
@@ -167,10 +229,34 @@ function buildPolylinePoints(values) {
 function updateHomeVisibility() {
   const isHome = state.activeId === "welcome";
   ui.profileHub.hidden = !isHome;
+  ui.profileHub.setAttribute("aria-hidden", isHome ? "false" : "true");
+  ui.profileHub.style.display = isHome ? "" : "none";
+  ui.profileHub.style.height = isHome ? "" : "0";
+  ui.profileHub.style.minHeight = isHome ? "" : "0";
+  ui.profileHub.style.margin = isHome ? "" : "0";
+  ui.profileHub.style.padding = isHome ? "" : "0";
+  ui.profileHub.style.border = isHome ? "" : "0";
+  ui.profileHub.style.overflow = isHome ? "" : "hidden";
   ui.body.classList.toggle("home-mode", isHome);
   ui.articleShell.hidden = isHome;
+  ui.articleShell.setAttribute("aria-hidden", isHome ? "true" : "false");
+  ui.articleShell.style.display = isHome ? "none" : "";
+  ui.articleShell.style.height = isHome ? "0" : "";
+  ui.articleShell.style.minHeight = isHome ? "0" : "";
+  ui.articleShell.style.margin = isHome ? "0" : "";
+  ui.articleShell.style.padding = isHome ? "0" : "";
+  ui.articleShell.style.border = isHome ? "0" : "";
+  ui.articleShell.style.overflow = isHome ? "hidden" : "";
   if (ui.tocPanel) {
     ui.tocPanel.hidden = isHome;
+    ui.tocPanel.setAttribute("aria-hidden", isHome ? "true" : "false");
+    ui.tocPanel.style.display = isHome ? "none" : "";
+    ui.tocPanel.style.height = isHome ? "0" : "";
+    ui.tocPanel.style.minHeight = isHome ? "0" : "";
+    ui.tocPanel.style.margin = isHome ? "0" : "";
+    ui.tocPanel.style.padding = isHome ? "0" : "";
+    ui.tocPanel.style.border = isHome ? "0" : "";
+    ui.tocPanel.style.overflow = isHome ? "hidden" : "";
   }
 }
 
@@ -211,7 +297,7 @@ function applyTheme() {
   `;
   document
     .querySelector('meta[name="theme-color"]')
-    ?.setAttribute("content", state.theme === "dark" ? "#0f1116" : "#f3f5fb");
+    ?.setAttribute("content", state.theme === "dark" ? "#050608" : "#f3f5fb");
 }
 
 function initTelegram() {
@@ -220,8 +306,8 @@ function initTelegram() {
   tg.ready();
   tg.expand();
   try {
-    tg.setHeaderColor(state.theme === "dark" ? "#0f1116" : "#f3f5fb");
-    tg.setBackgroundColor(state.theme === "dark" ? "#0f1116" : "#f3f5fb");
+    tg.setHeaderColor(state.theme === "dark" ? "#050608" : "#f3f5fb");
+    tg.setBackgroundColor(state.theme === "dark" ? "#050608" : "#f3f5fb");
   } catch {}
 }
 
@@ -415,7 +501,63 @@ function renderBlock(block) {
   return "";
 }
 
+function renderDomainsPage(manual) {
+  ui.articleHeader.innerHTML = `
+    <h2 class="article-title">Домены</h2>
+    <p class="article-lead">Введите домен и нажмите <b>Добавить</b>. Mini app закроется, а бот в обычном чате отправит NS-записи для этого домена.</p>
+  `;
+
+  ui.articleBody.innerHTML = `
+    <section class="domain-webapp-card">
+      <div class="domain-webapp-card__head">
+        <div class="domain-webapp-card__icon">
+          <span class="material-symbols-rounded">language</span>
+        </div>
+        <div>
+          <h3>Добавить домен</h3>
+          <p>Поддерживается формат вроде <code>example.com</code></p>
+        </div>
+      </div>
+
+      <label class="domain-webapp-field">
+        <span>Домен</span>
+        <input
+          id="domain-input"
+          type="text"
+          inputmode="url"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          placeholder="Введите домен, который хотите добавить"
+        >
+      </label>
+
+      <button class="domain-webapp-submit" type="button" data-domain-submit>
+        <span>Добавить</span>
+      </button>
+
+      <div class="domain-webapp-note">
+        <h3>Важно</h3>
+        <p>После добавления домена вы получите NS серверы, которые необходимо указать у вашего провайдера вместо старых. После успешной установки NS серверов вам будет необходимо нажать кнопку "Проверить" на нужном домене в таблице. Проверка доступна раз в 3 минуты и необходима для полного функционирования домена.</p>
+      </div>
+
+      <p class="domain-webapp-status" data-domain-status data-tone="neutral">
+        После нажатия mini app закроется и бот отправит NS-записи в обычный чат.
+      </p>
+    </section>
+  `;
+
+  ui.tocList.innerHTML = "";
+  ui.quickCard.innerHTML = "";
+  ui.articleFooter.innerHTML = "";
+}
+
 function renderArticle(manual) {
+  if (manual.id === DOMAIN_PAGE_ID) {
+    renderDomainsPage(manual);
+    return;
+  }
+
   ui.articleHeader.innerHTML = `
     <div class="article-badge-row">
       <div class="article-badge"><span class="material-symbols-rounded">${manual.icon}</span><span>${manual.category}</span></div>
@@ -543,6 +685,39 @@ function bindEvents() {
     const target = event.target.closest("[data-manual-id]");
     if (!target) return;
     setActiveManual(target.dataset.manualId);
+  });
+
+  ui.articleBody.addEventListener("click", (event) => {
+    const submitButton = event.target.closest("[data-domain-submit]");
+    if (!submitButton) return;
+
+    const input = ui.articleBody.querySelector("#domain-input");
+    const domain = normalizeDomainInput(input?.value);
+    if (input) {
+      input.value = domain;
+    }
+
+    if (!domain) {
+      setDomainFormStatus("Введите домен перед отправкой.", "error");
+      input?.focus();
+      return;
+    }
+
+    if (!isValidDomain(domain)) {
+      setDomainFormStatus("Домен должен быть в формате example.com.", "error");
+      input?.focus();
+      return;
+    }
+
+    openBotDomainFlow(domain);
+  });
+
+  ui.articleBody.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter") return;
+    const input = event.target.closest("#domain-input");
+    if (!input) return;
+    event.preventDefault();
+    ui.articleBody.querySelector("[data-domain-submit]")?.click();
   });
 
   ui.searchInput.addEventListener("input", (event) => {
