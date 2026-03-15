@@ -326,6 +326,20 @@ function setPromoFormStatus(text, tone = "neutral") {
   node.hidden = !text;
 }
 
+function updatePromoSubmitState() {
+  const submitButton = ui.articleBody.querySelector("[data-promo-submit]");
+  if (!submitButton) return;
+
+  const nameInput = ui.articleBody.querySelector("#promo-name-input");
+  const amountInput = ui.articleBody.querySelector("#promo-amount-input");
+  const promoName = normalizePromoName(nameInput?.value);
+  const promoAmount = normalizePromoAmount(amountInput?.value);
+  const isReady = Boolean(promoName) && Boolean(promoAmount);
+
+  submitButton.disabled = !isReady;
+  submitButton.classList.toggle("is-ready", isReady);
+}
+
 function openBotDomainFlow(domain) {
   const tg = window.Telegram?.WebApp;
 
