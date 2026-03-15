@@ -587,9 +587,76 @@ function renderDomainsPage(manual) {
   ui.articleFooter.innerHTML = "";
 }
 
+function submitDomainViaWebApp(domain) {
+  const tg = window.Telegram?.WebApp;
+
+  setDomainFormStatus("Отправляем домен в бота...", "success");
+
+  if (tg && typeof tg.sendData === "function") {
+    tg.sendData(JSON.stringify({
+      action: "add_domain",
+      domain,
+      web_version: "green",
+    }));
+    window.setTimeout(() => {
+      try {
+        tg.close();
+      } catch {}
+    }, 180);
+    return;
+  }
+
+  setDomainFormStatus("Telegram WebApp data недоступна в этой среде.", "error");
+}
+
+function renderDomainsPageCompact() {
+  ui.articleHeader.innerHTML = "";
+  ui.articleBody.innerHTML = `
+    <section class="domain-webapp-card domain-webapp-card--compact">
+      <div class="domain-webapp-card__head">
+        <div class="domain-webapp-card__icon">
+          <span class="material-symbols-rounded">language</span>
+        </div>
+        <div>
+          <h3>Добавить домен</h3>
+        </div>
+      </div>
+
+      <label class="domain-webapp-field">
+        <span>Домен</span>
+        <input
+          id="domain-input"
+          type="text"
+          inputmode="url"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          placeholder="Введите домен, который хотите добавить"
+        >
+      </label>
+
+      <button class="domain-webapp-submit" type="button" data-domain-submit>
+        <span>Добавить</span>
+      </button>
+
+      <div class="domain-webapp-note">
+        <h3>Важно</h3>
+        <p>После добавления бот отправит NS серверы, которые нужно указать у регистратора. Проверку домена дальше делайте уже в самом боте.</p>
+      </div>
+
+      <p class="domain-webapp-status" data-domain-status data-tone="neutral">
+        После нажатия mini app закроется, а бот пришлёт NS-записи в чат.
+      </p>
+    </section>
+  `;
+  ui.tocList.innerHTML = "";
+  ui.quickCard.innerHTML = "";
+  ui.articleFooter.innerHTML = "";
+}
+
 function renderArticle(manual) {
   if (manual.id === DOMAIN_PAGE_ID) {
-    renderDomainsPage(manual);
+    renderDomainsPageCompact();
     return;
   }
 
@@ -744,7 +811,7 @@ function bindEvents() {
       return;
     }
 
-    openBotDomainFlow(domain);
+    submitDomainViaWebApp(domain);
   });
 
   ui.articleBody.addEventListener("keydown", (event) => {
