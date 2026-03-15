@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Beverly Manuals</title>
+  <meta name="theme-color" content="#0f1116">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:FILL@0..1&family=Roboto+Flex:opsz,wght@8..144,400..800&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <header class="top-bar">
+      <div class="top-bar__lead">
+        <div class="brand-lockup">
+          <div class="brand-lockup__badge">M3</div>
+          <div>
+            <p class="eyebrow">Telegram WebApp</p>
+            <h1 class="brand-title">Beverly Manuals</h1>
+          </div>
+        </div>
+      </div>
+      <div class="top-bar__actions">
+        <label class="search-field">
+          <span class="material-symbols-rounded">search</span>
+          <input id="search-input" type="search" placeholder="Поиск по мануалам">
+        </label>
+      </div>
+    </header>
+
+    <div class="layout">
+      <aside class="nav-panel" id="nav-panel" aria-hidden="true">
+        <div class="nav-panel__header">
+          <div>
+            <p class="eyebrow">Навигация</p>
+            <h2 class="panel-title">База знаний</h2>
+          </div>
+          <button class="icon-button" id="nav-close" aria-label="Закрыть меню">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+
+        <section class="hero-card">
+          <p class="eyebrow">Material 3 Expressive</p>
+          <h2>Нормальный docs-shell для бота, а не очередной generic dashboard.</h2>
+          <p>Большая типографика, чёткая surface-иерархия, M3 motion и структура как у GitBook, но без дешёвого AI-вкуса.</p>
+        </section>
+
+        <div class="chip-row" id="category-chips"></div>
+        <nav class="manual-list" id="manual-list"></nav>
+      </aside>
+
+      <main class="content-panel">
+        <section class="profile-hub" id="profile-hub">
+          <section class="worker-card">
+            <div class="worker-card__decor" aria-hidden="true">
+              <svg viewBox="0 0 420 140" preserveAspectRatio="none">
+                <polyline points="0,104 52,86 104,98 156,54 208,78 260,34 312,62 364,48 420,66"></polyline>
+                <polyline points="0,118 52,112 104,72 156,92 208,44 260,84 312,24 364,54 420,38"></polyline>
+              </svg>
+            </div>
+
+            <div class="worker-card__header">
+              <div class="profile-card__identity">
+                <div class="profile-avatar" id="profile-avatar" aria-hidden="true"></div>
+                <div class="profile-copy">
+                  <p class="worker-card__eyebrow">Панель воркера</p>
+                  <h2 class="profile-name profile-name--username" id="profile-username">@username</h2>
+                </div>
+              </div>
+            </div>
+
+            <div class="worker-summary">
+              <article class="worker-summary__item">
+                <strong id="summary-domains">0</strong>
+                <span>Доменов</span>
+              </article>
+              <article class="worker-summary__item">
+                <strong id="summary-users">0</strong>
+                <span>Пользователей</span>
+              </article>
+              <article class="worker-summary__item">
+                <strong id="summary-deposits">$0</strong>
+                <span>Депозитов</span>
+              </article>
+            </div>
+          </section>
+
+          <section class="chart-card">
+            <div class="chart-card__header">
+              <div class="chart-card__title">
+                <span class="material-symbols-rounded">insert_chart</span>
+                <span>Статистика</span>
+              </div>
+              <button class="chart-card__filter" type="button">
+                <span>Всё время</span>
+                <span class="material-symbols-rounded">expand_more</span>
+              </button>
+            </div>
+
+            <div class="chart-legend">
+              <span class="chart-legend__item">
+                <span class="chart-legend__dot chart-legend__dot--blue"></span>
+                <span>Баланс</span>
+              </span>
+              <span class="chart-legend__item">
+                <span class="chart-legend__dot chart-legend__dot--amber"></span>
+                <span>Профит</span>
+              </span>
+            </div>
+
+            <div class="chart-shell">
+              <div class="chart-grid">
+                <span>$2</span>
+                <span>$1</span>
+                <span>$0</span>
+              </div>
+              <svg class="chart-plot" id="chart-plot" viewBox="0 0 320 180" preserveAspectRatio="none" aria-hidden="true">
+                <g class="chart-plot__guides">
+                  <line x1="0" y1="20" x2="320" y2="20"></line>
+                  <line x1="0" y1="90" x2="320" y2="90"></line>
+                  <line x1="0" y1="160" x2="320" y2="160"></line>
+                </g>
+                <polyline class="chart-plot__line chart-plot__line--blue" id="chart-balance-line" points=""></polyline>
+                <polyline class="chart-plot__line chart-plot__line--amber" id="chart-profit-line" points=""></polyline>
+              </svg>
+              <div class="chart-months" id="chart-months">
+                <span>Апр</span>
+                <span>Июн</span>
+                <span>Авг</span>
+                <span>Окт</span>
+                <span>Дек</span>
+                <span>Фев</span>
+              </div>
+            </div>
+          </section>
+
+          <div class="stats-strip">
+            <article class="stat-card">
+              <span class="stat-card__icon material-symbols-rounded">language</span>
+              <span class="stat-card__label">Домены</span>
+              <strong class="stat-card__value" id="stat-domains">0</strong>
+            </article>
+            <article class="stat-card">
+              <span class="stat-card__icon material-symbols-rounded">trending_up</span>
+              <span class="stat-card__label">Профит</span>
+              <strong class="stat-card__value" id="stat-profit">$0.00</strong>
+            </article>
+            <article class="stat-card">
+              <span class="stat-card__icon material-symbols-rounded">account_balance_wallet</span>
+              <span class="stat-card__label">Баланс</span>
+              <strong class="stat-card__value" id="stat-balance">$0.00</strong>
+            </article>
+          </div>
+        </section>
+
+        <section class="article-shell" id="article-shell">
+          <div class="article-shell__header" id="article-header"></div>
+          <div class="article-progress">
+            <div class="article-progress__bar" id="article-progress-bar"></div>
+          </div>
+          <article class="article-body" id="article-body"></article>
+          <footer class="article-footer" id="article-footer"></footer>
+        </section>
+      </main>
+
+      <aside class="toc-panel">
+        <div class="toc-panel__sticky">
+          <div class="toc-panel__intro">
+            <p class="eyebrow">Article Map</p>
+            <h3 class="panel-title">Оглавление</h3>
+          </div>
+          <nav class="toc-list" id="toc-list"></nav>
+          <section class="quick-card" id="quick-card"></section>
+        </div>
+      </aside>
+    </div>
+
+    <nav class="bottom-dock" aria-label="Основная навигация">
+      <div class="bottom-dock__pill">
+        <button class="dock-button" id="nav-toggle" type="button" aria-label="Открыть меню" aria-expanded="false" aria-controls="nav-panel" data-dock-action="menu">
+          <span class="dock-button__icon material-symbols-rounded">menu</span>
+          <span class="dock-button__label">Меню</span>
+        </button>
+        <button class="dock-button" type="button" data-dock-manual="welcome">
+          <span class="dock-button__icon material-symbols-rounded">home</span>
+          <span class="dock-button__label">Главная</span>
+        </button>
+        <button class="dock-button" type="button" data-dock-manual="promo">
+          <span class="dock-button__icon material-symbols-rounded">redeem</span>
+          <span class="dock-button__label">Промо</span>
+        </button>
+        <button class="dock-button" type="button" data-dock-manual="domains">
+          <span class="dock-button__icon material-symbols-rounded">language</span>
+          <span class="dock-button__label">Домены</span>
+        </button>
+        <button class="dock-button" id="theme-toggle" type="button" aria-label="Сменить тему" data-dock-action="theme">
+          <span class="dock-button__icon material-symbols-rounded">contrast</span>
+          <span class="dock-button__label">Тема</span>
+        </button>
+      </div>
+    </nav>
+
+    <div class="scrim" id="scrim" hidden></div>
+  </div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
