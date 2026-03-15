@@ -51,6 +51,7 @@ const ui = {
 
 const categories = [ALL_CATEGORY, ...new Set(MANUALS.map((item) => item.category))];
 const DOMAIN_PAGE_ID = "domains";
+const PROMO_PAGE_ID = "promo";
 const DOMAIN_RE = /^(?!-)(?:[a-z0-9-]{1,63}\.)+[a-z]{2,63}$/i;
 const MANUALS_URL = "https://beverly-hills-2.gitbook.io/manual/";
 const TIMEFRAME_LABELS = {
@@ -290,6 +291,21 @@ function normalizeDomainInput(value) {
     .replace(/\.+$/, "");
 }
 
+function normalizePromoName(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_")
+    .replace(/[^a-z0-9_]/g, "");
+}
+
+function normalizePromoAmount(value) {
+  const cleaned = String(value || "").replace(",", ".").trim();
+  const numeric = Number(cleaned);
+  if (!Number.isFinite(numeric) || numeric <= 0) return "";
+  return String(Math.floor(numeric));
+}
+
 function isValidDomain(value) {
   return DOMAIN_RE.test(value);
 }
@@ -299,6 +315,22 @@ function setDomainFormStatus(text, tone = "neutral") {
   if (!node) return;
   node.textContent = text;
   node.dataset.tone = tone;
+}
+
+function setPromoFormStatus(text, tone = "neutral") {
+  const node = ui.articleBody.querySelector("[data-promo-status]");
+  if (!node) return;
+  node.textContent = text;
+  node.dataset.tone = tone;
+}
+
+function updatePromoSubmitState() {
+  const nameInput = ui.articleBody.querySelector("#promo-name-input");
+  const amountInput = ui.articleBody.querySelector("#promo-amount-input");
+  const submitButton = ui.articleBody.querySelector("[data-promo-submit]");
+  if (!nameInput || !amountInput || !submitButton) return;
+  const isReady = Boolean(normalizePromoName(nameInput.value) && normalizePromoAmount(amountInput.value));
+  submitButton.disabled = !isReady;
 }
 
 function openBotDomainFlow(domain) {
@@ -773,6 +805,29 @@ function submitDomainViaWebApp(domain) {
   setDomainFormStatus("Telegram WebApp data недоступна в этой среде.", "error");
 }
 
+function submitPromoViaWebApp(name, amount, shouldWager) {
+  const tg = window.Telegram?.WebApp;
+
+  setPromoFormStatus("Отправляем промокод в бота...", "success");
+
+  if (tg && typeof tg.sendData === "function") {
+    tg.sendData(JSON.stringify({
+      action: "create_promo",
+      name,
+      amount,
+      should_wager: shouldWager,
+    }));
+    window.setTimeout(() => {
+      try {
+        tg.close();
+      } catch {}
+    }, 180);
+    return;
+  }
+
+  setPromoFormStatus("Telegram WebApp data недоступна в этой среде.", "error");
+}
+
 function renderDomainsPageCompact() {
   ui.articleHeader.innerHTML = "";
   ui.articleBody.innerHTML = `
@@ -818,9 +873,74 @@ function renderDomainsPageCompact() {
   ui.articleFooter.innerHTML = "";
 }
 
+function renderPromoPageCompact() {
+  ui.articleHeader.innerHTML = "";
+  ui.articleBody.innerHTML = `
+    <section class="promo-webapp-card">
+      <div class="domain-webapp-card__head">
+        <div class="domain-webapp-card__icon">
+          <span class="material-symbols-rounded">redeem</span>
+        </div>
+        <div>
+          <h3>Создать промокод</h3>
+        </div>
+      </div>
+
+      <label class="domain-webapp-field">
+        <span>Название промокода</span>
+        <input
+          id="promo-name-input"
+          type="text"
+          inputmode="text"
+          autocomplete="off"
+          autocapitalize="off"
+          spellcheck="false"
+          placeholder="Введите название промокода"
+        >
+      </label>
+
+      <label class="domain-webapp-field">
+        <span>Сумма промокода</span>
+        <input
+          id="promo-amount-input"
+          type="number"
+          inputmode="decimal"
+          min="1"
+          step="1"
+          placeholder="Введите сумму"
+        >
+      </label>
+
+      <label class="promo-webapp-switch">
+        <div class="promo-webapp-switch__copy">
+          <strong>Отыгрыш включён</strong>
+          <span>Материал-тумблер для should wager при создании промокода.</span>
+        </div>
+        <input class="promo-webapp-toggle" id="promo-wager-input" type="checkbox" checked>
+      </label>
+
+      <button class="promo-webapp-submit" type="button" data-promo-submit disabled>
+        <span>Создать промокод</span>
+      </button>
+
+      <p class="domain-webapp-status" data-promo-status data-tone="neutral">
+        После нажатия mini app закроется, а бот создаст промокод в обычном режиме.
+      </p>
+    </section>
+  `;
+  ui.tocList.innerHTML = "";
+  ui.quickCard.innerHTML = "";
+  ui.articleFooter.innerHTML = "";
+  updatePromoSubmitState();
+}
+
 function renderArticle(manual) {
   if (manual.id === DOMAIN_PAGE_ID) {
     renderDomainsPageCompact();
+    return;
+  }
+  if (manual.id === PROMO_PAGE_ID) {
+    renderPromoPageCompact();
     return;
   }
 
@@ -955,35 +1075,87 @@ function bindEvents() {
 
   ui.articleBody.addEventListener("click", (event) => {
     const submitButton = event.target.closest("[data-domain-submit]");
-    if (!submitButton) return;
+    if (submitButton) {
+      const input = ui.articleBody.querySelector("#domain-input");
+      const domain = normalizeDomainInput(input?.value);
+      if (input) {
+        input.value = domain;
+      }
 
-    const input = ui.articleBody.querySelector("#domain-input");
-    const domain = normalizeDomainInput(input?.value);
-    if (input) {
-      input.value = domain;
-    }
+      if (!domain) {
+        setDomainFormStatus("Введите домен перед отправкой.", "error");
+        input?.focus();
+        return;
+      }
 
-    if (!domain) {
-      setDomainFormStatus("Введите домен перед отправкой.", "error");
-      input?.focus();
+      if (!isValidDomain(domain)) {
+        setDomainFormStatus("Домен должен быть в формате example.com.", "error");
+        input?.focus();
+        return;
+      }
+
+      submitDomainViaWebApp(domain);
       return;
     }
 
-    if (!isValidDomain(domain)) {
-      setDomainFormStatus("Домен должен быть в формате example.com.", "error");
-      input?.focus();
+    const promoSubmitButton = event.target.closest("[data-promo-submit]");
+    if (!promoSubmitButton) return;
+
+    const nameInput = ui.articleBody.querySelector("#promo-name-input");
+    const amountInput = ui.articleBody.querySelector("#promo-amount-input");
+    const wagerInput = ui.articleBody.querySelector("#promo-wager-input");
+    const promoName = normalizePromoName(nameInput?.value);
+    const promoAmount = normalizePromoAmount(amountInput?.value);
+
+    if (nameInput) {
+      nameInput.value = promoName;
+    }
+    if (amountInput) {
+      amountInput.value = promoAmount;
+    }
+
+    if (!promoName) {
+      setPromoFormStatus("Введите корректное название промокода.", "error");
+      nameInput?.focus();
       return;
     }
 
-    submitDomainViaWebApp(domain);
+    if (!promoAmount) {
+      setPromoFormStatus("Введите корректную сумму промокода.", "error");
+      amountInput?.focus();
+      return;
+    }
+
+    submitPromoViaWebApp(promoName, promoAmount, Boolean(wagerInput?.checked));
   });
 
   ui.articleBody.addEventListener("keydown", (event) => {
     if (event.key !== "Enter") return;
     const input = event.target.closest("#domain-input");
-    if (!input) return;
+    if (input) {
+      event.preventDefault();
+      ui.articleBody.querySelector("[data-domain-submit]")?.click();
+      return;
+    }
+
+    const promoInput = event.target.closest("#promo-name-input, #promo-amount-input");
+    if (!promoInput) return;
     event.preventDefault();
-    ui.articleBody.querySelector("[data-domain-submit]")?.click();
+    ui.articleBody.querySelector("[data-promo-submit]")?.click();
+  });
+
+  ui.articleBody.addEventListener("input", (event) => {
+    const promoNameInput = event.target.closest("#promo-name-input");
+    if (promoNameInput) {
+      promoNameInput.value = normalizePromoName(promoNameInput.value);
+      updatePromoSubmitState();
+      return;
+    }
+
+    const promoAmountInput = event.target.closest("#promo-amount-input");
+    if (!promoAmountInput) return;
+    promoAmountInput.value = promoAmountInput.value.replace(/[^\d.,]/g, "");
+    updatePromoSubmitState();
   });
 
   ui.searchInput.addEventListener("input", (event) => {
