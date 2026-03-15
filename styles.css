@@ -396,48 +396,94 @@ body.home-mode .toc-panel {
   font-weight: 700;
 }
 
-.chart-timeframe {
-  display: inline-grid;
-  grid-template-columns: repeat(3, minmax(0, auto));
-  gap: 4px;
-  padding: 4px;
-  border-radius: 999px;
-  border: 1px solid color-mix(in srgb, var(--outline-variant) 72%, transparent);
-  background: color-mix(in srgb, var(--surface-high) 78%, #000 22%);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, white 4%, transparent);
+.chart-timeframe-select {
+  position: relative;
+  min-width: 136px;
 }
 
-.chart-timeframe__button {
+.chart-timeframe-select__trigger {
+  width: 100%;
   appearance: none;
-  border: 0;
-  min-width: 0;
-  height: 34px;
-  padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--outline-variant) 72%, transparent);
+  background: color-mix(in srgb, var(--surface-high) 82%, #000 18%);
+  color: var(--on-surface);
+  height: 40px;
+  padding: 0 12px 0 14px;
   border-radius: 999px;
-  background: transparent;
-  color: var(--on-surface-variant);
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   font: inherit;
-  font-size: 0.84rem;
+  font-size: 0.86rem;
   font-weight: 650;
   letter-spacing: -0.01em;
   cursor: pointer;
-  transition: background-color 180ms ease, color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, white 4%, transparent);
+  transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease;
 }
 
-.chart-timeframe__button:hover {
+.chart-timeframe-select__trigger:hover {
+  border-color: color-mix(in srgb, var(--primary) 38%, var(--outline-variant));
+  background: color-mix(in srgb, var(--surface-bright) 18%, #000 82%);
+}
+
+.chart-timeframe-select__trigger .material-symbols-rounded {
+  font-size: 1.12rem;
+  transition: transform 180ms ease;
+}
+
+.chart-timeframe-select.is-open .chart-timeframe-select__trigger .material-symbols-rounded {
+  transform: rotate(180deg);
+}
+
+.chart-timeframe-select__trigger:focus-visible,
+.chart-timeframe-select__option:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--primary) 74%, white 10%);
+  outline-offset: 2px;
+}
+
+.chart-timeframe-select__menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 100%;
+  padding: 6px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--outline-variant) 72%, transparent);
+  background: color-mix(in srgb, var(--surface-container-high) 88%, #000 12%);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.38);
+  display: grid;
+  gap: 4px;
+  z-index: 20;
+}
+
+.chart-timeframe-select__option {
+  appearance: none;
+  border: 0;
+  min-width: 0;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--on-surface-variant);
+  text-align: left;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.chart-timeframe-select__option:hover {
+  background: color-mix(in srgb, var(--surface-bright) 18%, transparent);
   color: var(--on-surface);
-  background: color-mix(in srgb, var(--surface-bright) 50%, transparent);
 }
 
-.chart-timeframe__button.is-active {
+.chart-timeframe-select__option.is-active {
   background: color-mix(in srgb, var(--primary) 18%, #fff 6%);
   color: var(--on-surface);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--primary) 34%, transparent);
-}
-
-.chart-timeframe__button:focus-visible {
-  outline: 2px solid color-mix(in srgb, var(--primary) 74%, white 10%);
-  outline-offset: 2px;
 }
 
 .chart-legend {
@@ -1288,14 +1334,14 @@ body.nav-open {
     flex-direction: column;
   }
 
-  .chart-timeframe {
+  .chart-timeframe-select {
     width: 100%;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-width: 0;
   }
 
-  .chart-timeframe__button {
-    height: 36px;
-    padding: 0 10px;
+  .chart-timeframe-select__menu {
+    left: 0;
+    right: 0;
   }
 
   .stats-strip {

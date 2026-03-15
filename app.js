@@ -40,7 +40,10 @@ const ui = {
   progressBar: document.getElementById("article-progress-bar"),
   searchInput: document.getElementById("search-input"),
   themeToggle: document.getElementById("theme-toggle"),
-  timeframeSwitcher: document.getElementById("chart-timeframe"),
+  timeframeSelect: document.getElementById("chart-timeframe-select"),
+  timeframeTrigger: document.getElementById("chart-timeframe-trigger"),
+  timeframeMenu: document.getElementById("chart-timeframe-menu"),
+  timeframeValue: document.getElementById("chart-timeframe-value"),
   navToggle: document.getElementById("nav-toggle"),
   navClose: document.getElementById("nav-close"),
   bottomDock: document.querySelector(".bottom-dock"),
@@ -49,6 +52,12 @@ const ui = {
 const categories = [ALL_CATEGORY, ...new Set(MANUALS.map((item) => item.category))];
 const DOMAIN_PAGE_ID = "domains";
 const DOMAIN_RE = /^(?!-)(?:[a-z0-9-]{1,63}\.)+[a-z]{2,63}$/i;
+const MANUALS_URL = "https://beverly-hills-2.gitbook.io/manual/";
+const TIMEFRAME_LABELS = {
+  all: "Всё время",
+  month: "Месяц",
+  day: "День",
+};
 
 function getTelegramUser() {
   return window.Telegram?.WebApp?.initDataUnsafe?.user || {};
@@ -315,15 +324,40 @@ function openBotDomainFlow(domain) {
 }
 
 function openManualsLink() {
-  const url = "https://beverly-hills-2.gitbook.io/manual/";
   const tg = window.Telegram?.WebApp;
 
   if (tg?.openLink) {
-    tg.openLink(url);
-    return;
+    try {
+      tg.openLink(MANUALS_URL);
+      return;
+    } catch {}
   }
 
-  window.location.href = url;
+  const popup = window.open(MANUALS_URL, "_blank", "noopener,noreferrer");
+  if (popup) return;
+  window.location.assign(MANUALS_URL);
+}
+
+function openTimeframeMenu() {
+  if (!ui.timeframeSelect || !ui.timeframeMenu || !ui.timeframeTrigger) return;
+  ui.timeframeSelect.classList.add("is-open");
+  ui.timeframeMenu.hidden = false;
+  ui.timeframeTrigger.setAttribute("aria-expanded", "true");
+}
+
+function closeTimeframeMenu() {
+  if (!ui.timeframeSelect || !ui.timeframeMenu || !ui.timeframeTrigger) return;
+  ui.timeframeSelect.classList.remove("is-open");
+  ui.timeframeMenu.hidden = true;
+  ui.timeframeTrigger.setAttribute("aria-expanded", "false");
+}
+
+function toggleTimeframeMenu() {
+  if (ui.timeframeSelect?.classList.contains("is-open")) {
+    closeTimeframeMenu();
+  } else {
+    openTimeframeMenu();
+  }
 }
 
 function buildPolylinePoints(values, maxValue = null) {
@@ -354,11 +388,15 @@ function renderChart(profile) {
   const timeframe = profile.chartData?.[timeframeKey] || normalizeChartData(null, profile.balance, profile.profit).all;
   const maxValue = Math.max(1, ...timeframe.balance, ...timeframe.profit);
 
-  if (ui.timeframeSwitcher) {
-    ui.timeframeSwitcher.querySelectorAll("[data-timeframe]").forEach((button) => {
+  if (ui.timeframeValue) {
+    ui.timeframeValue.textContent = TIMEFRAME_LABELS[timeframeKey] || TIMEFRAME_LABELS.all;
+  }
+
+  if (ui.timeframeMenu) {
+    ui.timeframeMenu.querySelectorAll("[data-timeframe]").forEach((button) => {
       const isActive = button.dataset.timeframe === timeframeKey;
       button.classList.toggle("is-active", isActive);
-      button.setAttribute("aria-pressed", isActive ? "true" : "false");
+      button.setAttribute("aria-selected", isActive ? "true" : "false");
     });
   }
 
@@ -944,12 +982,27 @@ function bindEvents() {
     syncArticleToFilters();
   });
 
-  ui.timeframeSwitcher?.addEventListener("click", (event) => {
+  ui.timeframeTrigger?.addEventListener("click", () => {
+    toggleTimeframeMenu();
+  });
+
+  ui.timeframeMenu?.addEventListener("click", (event) => {
     const button = event.target.closest("[data-timeframe]");
     if (!button) return;
     state.timeframe = button.dataset.timeframe;
     localStorage.setItem("beverly-webapp-timeframe", state.timeframe);
+    closeTimeframeMenu();
     renderProfileSummary();
+  });
+
+  ui.navToggle?.addEventListener("click", (event) => {
+    if (event.currentTarget?.dataset?.dockAction === "manuals-link") {
+      event.preventDefault();
+      event.stopPropagation();
+      openManualsLink();
+      return;
+    }
+    toggleNav();
   });
 
   ui.navClose.addEventListener("click", closeNav);
@@ -979,9 +1032,18 @@ function bindEvents() {
   });
 
   window.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && ui.timeframeSelect?.classList.contains("is-open")) {
+      closeTimeframeMenu();
+    }
     if (event.key === "Escape" && state.navOpen) {
       closeNav();
     }
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!ui.timeframeSelect?.classList.contains("is-open")) return;
+    if (event.target.closest("#chart-timeframe-select")) return;
+    closeTimeframeMenu();
   });
 
   window.addEventListener("hashchange", () => {

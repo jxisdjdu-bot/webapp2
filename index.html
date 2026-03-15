@@ -94,10 +94,16 @@
                 <span class="material-symbols-rounded">insert_chart</span>
                 <span>Статистика</span>
               </div>
-              <div class="chart-timeframe" id="chart-timeframe" role="tablist" aria-label="Период статистики">
-                <button class="chart-timeframe__button" type="button" data-timeframe="all">Всё время</button>
-                <button class="chart-timeframe__button" type="button" data-timeframe="month">Месяц</button>
-                <button class="chart-timeframe__button" type="button" data-timeframe="day">День</button>
+              <div class="chart-timeframe-select" id="chart-timeframe-select">
+                <button class="chart-timeframe-select__trigger" id="chart-timeframe-trigger" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="chart-timeframe-menu">
+                  <span id="chart-timeframe-value">Всё время</span>
+                  <span class="material-symbols-rounded">expand_more</span>
+                </button>
+                <div class="chart-timeframe-select__menu" id="chart-timeframe-menu" role="listbox" aria-label="Период статистики" hidden>
+                  <button class="chart-timeframe-select__option" type="button" role="option" data-timeframe="all">Всё время</button>
+                  <button class="chart-timeframe-select__option" type="button" role="option" data-timeframe="month">Месяц</button>
+                  <button class="chart-timeframe-select__option" type="button" role="option" data-timeframe="day">День</button>
+                </div>
               </div>
             </div>
 
