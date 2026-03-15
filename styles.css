@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   color-scheme: dark;
   --primary: #f0f1f4;
   --on-primary: #090a0d;
@@ -1012,7 +1012,7 @@ body.home-mode .toc-panel {
 
 .domain-webapp-status[data-tone="success"] {
   color: #9dd6a2;
-}
+}`r`n`r`n.domain-webapp-status[hidden] {`r`n  display: none !important;`r`n}
 
 .promo-webapp-switch {
   display: grid;
@@ -1527,3 +1527,5 @@ body.nav-open {
     padding-right: 18px;
   }
 }
+
+
