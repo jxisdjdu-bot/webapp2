@@ -310,17 +310,20 @@ function isValidDomain(value) {
   return DOMAIN_RE.test(value);
 }
 
-function setDomainFormStatus(text, tone = "neutral") {`r`n  const node = ui.articleBody.querySelector("[data-domain-status]");`r`n  if (!node) return;`r`n  node.textContent = text || "";`r`n  node.dataset.tone = tone;`r`n  node.hidden = !text;`r`n}
+function setDomainFormStatus(text, tone = "neutral") {
+  const node = ui.articleBody.querySelector("[data-domain-status]");
+  if (!node) return;
+  node.textContent = text || "";
+  node.dataset.tone = tone;
+  node.hidden = !text;
+}
 
-function setPromoFormStatus(text, tone = "neutral") {`r`n  const node = ui.articleBody.querySelector("[data-promo-status]");`r`n  if (!node) return;`r`n  node.textContent = text || "";`r`n  node.dataset.tone = tone;`r`n  node.hidden = !text;`r`n}
-
-function updatePromoSubmitState() {
-  const nameInput = ui.articleBody.querySelector("#promo-name-input");
-  const amountInput = ui.articleBody.querySelector("#promo-amount-input");
-  const submitButton = ui.articleBody.querySelector("[data-promo-submit]");
-  if (!nameInput || !amountInput || !submitButton) return;
-  const isReady = Boolean(normalizePromoName(nameInput.value) && normalizePromoAmount(amountInput.value));
-  submitButton.disabled = !isReady;
+function setPromoFormStatus(text, tone = "neutral") {
+  const node = ui.articleBody.querySelector("[data-promo-status]");
+  if (!node) return;
+  node.textContent = text || "";
+  node.dataset.tone = tone;
+  node.hidden = !text;
 }
 
 function openBotDomainFlow(domain) {
@@ -1225,6 +1228,8 @@ function boot() {
 }
 
 boot();
+
+
 
 
 

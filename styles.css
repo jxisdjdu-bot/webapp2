@@ -1012,7 +1012,11 @@ body.home-mode .toc-panel {
 
 .domain-webapp-status[data-tone="success"] {
   color: #9dd6a2;
-}`r`n`r`n.domain-webapp-status[hidden] {`r`n  display: none !important;`r`n}
+}
+
+.domain-webapp-status[hidden] {
+  display: none !important;
+}
 
 .promo-webapp-switch {
   display: grid;
@@ -1527,5 +1531,6 @@ body.nav-open {
     padding-right: 18px;
   }
 }
+
 
 
