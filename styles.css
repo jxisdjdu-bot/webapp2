@@ -541,6 +541,7 @@ body.home-mode .toc-panel {
 }
 
 .chart-shell {
+  position: relative;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: 10px;
@@ -560,6 +561,8 @@ body.home-mode .toc-panel {
   width: 100%;
   min-height: 150px;
   overflow: visible;
+  cursor: crosshair;
+  touch-action: none;
 }
 
 .chart-plot__guides line {
@@ -582,6 +585,74 @@ body.home-mode .toc-panel {
   stroke: #f8a62b;
 }
 
+.chart-plot__hover-line {
+  stroke: color-mix(in srgb, #f8a62b 60%, white 10%);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 5;
+  opacity: 0;
+  transition: opacity 140ms ease;
+}
+
+.chart-plot__hover-line.is-visible {
+  opacity: 0.9;
+}
+
+.chart-plot__points {
+  pointer-events: none;
+}
+
+.chart-plot__point {
+  fill: #f8a62b;
+  stroke: #090b0f;
+  stroke-width: 1.8;
+  opacity: 0.92;
+  transition: r 140ms ease, opacity 140ms ease, stroke-width 140ms ease;
+}
+
+.chart-plot__point.is-active {
+  opacity: 1;
+  stroke-width: 2.6;
+}
+
+.chart-tooltip {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 4;
+  min-width: 92px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--outline) 34%, transparent);
+  background: rgba(12, 14, 18, 0.96);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.34);
+  display: grid;
+  gap: 2px;
+  pointer-events: none;
+  transform: translate(-50%, calc(-100% - 10px));
+  backdrop-filter: blur(12px);
+  transition: left 140ms ease, top 140ms ease, transform 140ms ease, opacity 140ms ease;
+}
+
+.chart-tooltip[hidden] {
+  display: none;
+}
+
+.chart-tooltip__label {
+  color: var(--on-surface-variant);
+  font-size: 0.69rem;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.chart-tooltip__value {
+  color: var(--on-surface);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
 .chart-months {
   grid-column: 2;
   display: grid;
@@ -589,6 +660,26 @@ body.home-mode .toc-panel {
   gap: 6px;
   color: var(--on-surface-variant);
   font-size: 0.8rem;
+}
+
+.chart-months span {
+  transition: color 140ms ease, opacity 140ms ease, transform 140ms ease;
+}
+
+.chart-months[data-compact="true"] {
+  font-size: 0.68rem;
+  gap: 4px;
+}
+
+.chart-months .is-muted {
+  opacity: 0.72;
+}
+
+.chart-months span.is-active {
+  color: var(--on-surface);
+  opacity: 1;
+  transform: translateY(-1px);
+  font-weight: 700;
 }
 
 .stats-strip {

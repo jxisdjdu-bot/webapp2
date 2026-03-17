@@ -9,6 +9,8 @@ const state = {
   theme: localStorage.getItem("beverly-webapp-theme") || "dark",
   timeframe: localStorage.getItem("beverly-webapp-timeframe") || "all",
   navOpen: false,
+  chart: null,
+  activeChartPoint: null,
 };
 
 const ui = {
@@ -26,9 +28,16 @@ const ui = {
   statBalance: document.getElementById("stat-balance"),
   statProfit: document.getElementById("stat-profit"),
   statDomains: document.getElementById("stat-domains"),
+  chartShell: document.querySelector(".chart-shell"),
   chartGrid: document.getElementById("chart-grid"),
+  chartPlot: document.getElementById("chart-plot"),
   chartBalanceLine: document.getElementById("chart-balance-line"),
   chartProfitLine: document.getElementById("chart-profit-line"),
+  chartProfitPoints: document.getElementById("chart-profit-points"),
+  chartHoverLine: document.getElementById("chart-hover-line"),
+  chartTooltip: document.getElementById("chart-tooltip"),
+  chartTooltipLabel: document.getElementById("chart-tooltip-label"),
+  chartTooltipValue: document.getElementById("chart-tooltip-value"),
   chartMonths: document.getElementById("chart-months"),
   categoryChips: document.getElementById("category-chips"),
   manualList: document.getElementById("manual-list"),
@@ -54,6 +63,11 @@ const DOMAIN_PAGE_ID = "domains";
 const PROMO_PAGE_ID = "promo";
 const DOMAIN_RE = /^(?!-)(?:[a-z0-9-]{1,63}\.)+[a-z]{2,63}$/i;
 const MANUALS_URL = "https://beverly-hills-2.gitbook.io/manual/";
+const CHART_POINT_COUNTS = {
+  all: 12,
+  month: 10,
+  day: 12,
+};
 const TIMEFRAME_LABELS = {
   all: "Всё время",
   month: "Месяц",
@@ -141,52 +155,90 @@ function formatMoney(value) {
 
 function parseSeries(value, fallbackValue = 0) {
   if (Array.isArray(value)) {
-    return value.map((item) => toNumber(item)).slice(0, 6);
+    return value.map((item) => toNumber(item));
   }
 
   if (typeof value === "string") {
     try {
       const parsed = JSON.parse(value);
       if (Array.isArray(parsed)) {
-        return parsed.map((item) => toNumber(item)).slice(0, 6);
+        return parsed.map((item) => toNumber(item));
       }
     } catch {}
 
     if (value.includes(",")) {
-      return value.split(",").map((item) => toNumber(item.trim())).slice(0, 6);
+      return value.split(",").map((item) => toNumber(item.trim()));
     }
   }
 
-  return [0, 0, 0, 0, 0, toNumber(fallbackValue)];
+  return [toNumber(fallbackValue)];
 }
 
 function getDefaultLabels(type) {
+  const count = CHART_POINT_COUNTS[type] || 6;
   const now = new Date();
   if (type === "day") {
-    return Array.from({ length: 6 }, (_, index) => {
-      const point = new Date(now.getTime() - ((5 - index) * 4 * 60 * 60 * 1000));
+    return Array.from({ length: count }, (_, index) => {
+      const point = new Date(now.getTime() - ((count - 1 - index) * 2 * 60 * 60 * 1000));
       return point.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
     });
   }
 
   if (type === "month") {
-    return Array.from({ length: 6 }, (_, index) => {
-      const point = new Date(now.getTime() - ((5 - index) * 5 * 24 * 60 * 60 * 1000));
+    return Array.from({ length: count }, (_, index) => {
+      const point = new Date(now.getTime() - ((count - 1 - index) * 3 * 24 * 60 * 60 * 1000));
       return point.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
     });
   }
 
-  return Array.from({ length: 6 }, (_, index) => {
-    const point = new Date(now.getFullYear(), now.getMonth() - (5 - index), 1);
-    return point.toLocaleDateString("ru-RU", { month: "short" }).replace(".", "");
+  return Array.from({ length: count }, (_, index) => {
+    const point = new Date(now.getFullYear(), now.getMonth() - (count - 1 - index), 1);
+    return point.toLocaleDateString("ru-RU", { month: "short", year: "2-digit" }).replace(".", "");
   });
 }
 
+function fitSeriesToLength(values, targetLength, fallbackValue = 0) {
+  const normalized = Array.isArray(values) ? values.map((item) => toNumber(item)) : [];
+  if (!targetLength) return normalized;
+  if (normalized.length === targetLength) return normalized;
+  if (!normalized.length) {
+    return buildChartFallbackSeries(fallbackValue, targetLength);
+  }
+  if (normalized.length > targetLength) {
+    return normalized.slice(0, targetLength);
+  }
+
+  const padded = [...normalized];
+  while (padded.length < targetLength) {
+    padded.push(normalized[normalized.length - 1] ?? 0);
+  }
+  return padded;
+}
+
+function fitLabelsToLength(labels, targetLength, fallbackLabels = []) {
+  const normalized = Array.isArray(labels) ? labels.map((item) => String(item || "")) : [];
+  if (!targetLength) return normalized;
+  if (normalized.length === targetLength) return normalized;
+  if (!normalized.length) {
+    return [...fallbackLabels].slice(0, targetLength);
+  }
+  if (normalized.length > targetLength) {
+    return normalized.slice(0, targetLength);
+  }
+
+  const padded = [...normalized];
+  while (padded.length < targetLength) {
+    padded.push("");
+  }
+  return padded;
+}
+
 function normalizeChartEntry(entry, fallbackBalance, fallbackProfit, fallbackLabels) {
+  const labels = Array.isArray(entry?.l) && entry.l.length ? [...entry.l] : fallbackLabels;
   return {
-    labels: Array.isArray(entry?.l) && entry.l.length ? entry.l.slice(0, 6) : fallbackLabels,
-    balance: parseSeries(entry?.b, fallbackBalance),
-    profit: parseSeries(entry?.p, fallbackProfit),
+    labels,
+    balance: fitSeriesToLength(parseSeries(entry?.b, fallbackBalance), labels.length, fallbackBalance),
+    profit: fitSeriesToLength(parseSeries(entry?.p, fallbackProfit), labels.length, fallbackProfit),
   };
 }
 
@@ -415,9 +467,31 @@ function buildPolylinePoints(values, maxValue = null) {
   }).join(" ");
 }
 
-function buildChartFallbackSeries(totalValue) {
+function buildChartPoints(values, maxValue = null) {
+  const width = 320;
+  const top = 20;
+  const bottom = 160;
+  const left = 0;
+  const right = width;
+  const chartValues = values.length === 1 ? [values[0], values[0]] : values;
+  const resolvedMaxValue = Math.max(1, ...(maxValue ? [maxValue] : chartValues));
+
+  return chartValues.map((value, index) => {
+    const x = left + (right - left) * (index / Math.max(1, chartValues.length - 1));
+    const y = bottom - ((value / resolvedMaxValue) * (bottom - top));
+    return {
+      index,
+      x,
+      y,
+      value: toNumber(value),
+    };
+  });
+}
+
+function buildChartFallbackSeries(totalValue, count = 6) {
   const safeTotal = Math.max(0, toNumber(totalValue));
-  return [0, 0, 0, 0, 0, safeTotal];
+  if (count <= 1) return [safeTotal];
+  return Array.from({ length: count }, (_, index) => (index === count - 1 ? safeTotal : 0));
 }
 
 function formatAxisValue(value) {
@@ -427,15 +501,124 @@ function formatAxisValue(value) {
   return `$${value.toFixed(2).replace(/\.00$/, "")}`;
 }
 
+function renderProfitPointMarkers(points) {
+  if (!ui.chartProfitPoints) return;
+  ui.chartProfitPoints.innerHTML = points
+    .filter((point) => point.value > 0)
+    .map((point) => `
+    <circle
+      class="chart-plot__point${state.activeChartPoint === point.index ? " is-active" : ""}"
+      cx="${point.x.toFixed(2)}"
+      cy="${point.y.toFixed(2)}"
+      r="${state.activeChartPoint === point.index ? "5.2" : "3.6"}"
+      data-chart-point="${point.index}"
+    ></circle>
+  `).join("");
+}
+
+function syncChartLabelHighlights() {
+  if (!ui.chartMonths) return;
+  ui.chartMonths.querySelectorAll("[data-chart-label]").forEach((label) => {
+    const isActive = Number(label.dataset.chartLabel) === state.activeChartPoint;
+    label.classList.toggle("is-active", isActive);
+  });
+}
+
+function hideChartTooltip() {
+  state.activeChartPoint = null;
+  ui.chartTooltip?.setAttribute("hidden", "");
+  ui.chartHoverLine?.classList.remove("is-visible");
+  if (ui.chartHoverLine) {
+    ui.chartHoverLine.setAttribute("x1", "0");
+    ui.chartHoverLine.setAttribute("x2", "0");
+  }
+  if (state.chart?.profitPoints) {
+    renderProfitPointMarkers(state.chart.profitPoints);
+  }
+  syncChartLabelHighlights();
+}
+
+function showChartTooltip(index) {
+  if (!state.chart?.profitPoints?.length) return;
+  const point = state.chart.profitPoints[index];
+  if (!point) return;
+
+  state.activeChartPoint = index;
+  renderProfitPointMarkers(state.chart.profitPoints);
+  syncChartLabelHighlights();
+
+  if (ui.chartHoverLine) {
+    ui.chartHoverLine.setAttribute("x1", point.x.toFixed(2));
+    ui.chartHoverLine.setAttribute("x2", point.x.toFixed(2));
+    ui.chartHoverLine.classList.add("is-visible");
+  }
+
+  if (!ui.chartTooltip || !ui.chartTooltipLabel || !ui.chartTooltipValue || !ui.chartShell || !ui.chartPlot) {
+    return;
+  }
+
+  ui.chartTooltipLabel.textContent = state.chart.labels[index] || "";
+  ui.chartTooltipValue.textContent = formatMoney(point.value);
+  ui.chartTooltip.removeAttribute("hidden");
+
+  const shellRect = ui.chartShell.getBoundingClientRect();
+  const plotRect = ui.chartPlot.getBoundingClientRect();
+  const x = (plotRect.left - shellRect.left) + ((point.x / 320) * plotRect.width);
+  const y = (plotRect.top - shellRect.top) + ((point.y / 180) * plotRect.height);
+
+  ui.chartTooltip.style.left = `${x}px`;
+  ui.chartTooltip.style.top = `${y}px`;
+}
+
+function showNearestChartPoint(clientX) {
+  if (!state.chart?.profitPoints?.length || !ui.chartPlot) return;
+  const visiblePoints = state.chart.profitPoints.filter((point) => point.value > 0);
+  if (!visiblePoints.length) {
+    hideChartTooltip();
+    return;
+  }
+  const rect = ui.chartPlot.getBoundingClientRect();
+  const relativeX = ((clientX - rect.left) / rect.width) * 320;
+  let nearest = visiblePoints[0];
+
+  for (const point of visiblePoints) {
+    if (Math.abs(point.x - relativeX) < Math.abs(nearest.x - relativeX)) {
+      nearest = point;
+    }
+  }
+
+  showChartTooltip(nearest.index);
+}
+
 function renderChart(profile) {
   const hasExplicitTimeframe = Boolean(profile.chartData?.[state.timeframe]);
   const timeframeKey = hasExplicitTimeframe ? state.timeframe : "all";
   const timeframe = profile.chartData?.[timeframeKey] || normalizeChartData(null, profile.balance, profile.profit).all;
-  const resolvedBalance = Array.isArray(timeframe.balance) ? [...timeframe.balance] : buildChartFallbackSeries(profile.balance);
-  const resolvedProfit = Array.isArray(timeframe.profit) ? [...timeframe.profit] : buildChartFallbackSeries(profile.deposits || profile.profit);
+  const labelCount = Math.max(
+    Array.isArray(timeframe.labels) ? timeframe.labels.length : 0,
+    Array.isArray(timeframe.balance) ? timeframe.balance.length : 0,
+    Array.isArray(timeframe.profit) ? timeframe.profit.length : 0,
+    CHART_POINT_COUNTS[timeframeKey] || 6,
+  );
+  const resolvedLabels = Array.isArray(timeframe.labels) && timeframe.labels.length
+    ? [...timeframe.labels]
+    : getDefaultLabels(timeframeKey);
+  const normalizedLabels = fitLabelsToLength(resolvedLabels, labelCount, getDefaultLabels(timeframeKey));
+  const resolvedBalance = fitSeriesToLength(
+    Array.isArray(timeframe.balance) ? [...timeframe.balance] : [],
+    labelCount,
+    profile.balance,
+  );
+  const resolvedProfit = fitSeriesToLength(
+    Array.isArray(timeframe.profit) ? [...timeframe.profit] : [],
+    labelCount,
+    profile.deposits || profile.profit,
+  );
   const hasAnyChartValue = [...resolvedBalance, ...resolvedProfit].some((value) => toNumber(value) > 0);
   const axisMax = hasAnyChartValue ? Math.max(...resolvedBalance, ...resolvedProfit) : 0;
-  const plotMax = axisMax > 0 ? Math.max(1, axisMax * 1.18) : 1;
+  const plotMax = axisMax > 0 ? Math.max(1, axisMax * 1.16) : 1;
+  const balancePoints = buildChartPoints(resolvedBalance, plotMax);
+  const profitPoints = buildChartPoints(resolvedProfit, plotMax);
 
   if (ui.timeframeValue) {
     ui.timeframeValue.textContent = TIMEFRAME_LABELS[timeframeKey] || TIMEFRAME_LABELS.all;
@@ -457,12 +640,25 @@ function renderChart(profile) {
   }
 
   if (ui.chartMonths) {
-    ui.chartMonths.style.gridTemplateColumns = `repeat(${Math.max(1, timeframe.labels.length)}, minmax(0, 1fr))`;
-    ui.chartMonths.innerHTML = timeframe.labels.map((label) => `<span>${label}</span>`).join("");
+    ui.chartMonths.style.gridTemplateColumns = `repeat(${Math.max(1, normalizedLabels.length)}, minmax(0, 1fr))`;
+    ui.chartMonths.dataset.compact = normalizedLabels.length > 8 ? "true" : "false";
+    ui.chartMonths.innerHTML = normalizedLabels.map((label, index) => {
+      const shouldFade = normalizedLabels.length > 8 && index % 2 === 1;
+      return `<span data-chart-label="${index}" class="${shouldFade ? "is-muted" : ""}">${label}</span>`;
+    }).join("");
   }
 
   ui.chartBalanceLine.setAttribute("points", buildPolylinePoints(resolvedBalance, plotMax));
   ui.chartProfitLine.setAttribute("points", buildPolylinePoints(resolvedProfit, plotMax));
+
+  state.chart = {
+    labels: normalizedLabels,
+    balancePoints,
+    profitPoints,
+  };
+  state.activeChartPoint = null;
+  renderProfitPointMarkers(profitPoints);
+  hideChartTooltip();
 }
 
 function updateHomeVisibility() {
@@ -1165,6 +1361,27 @@ function bindEvents() {
     localStorage.setItem("beverly-webapp-timeframe", state.timeframe);
     closeTimeframeMenu();
     renderProfileSummary();
+  });
+
+  ui.chartPlot?.addEventListener("pointerdown", (event) => {
+    showNearestChartPoint(event.clientX);
+  });
+
+  ui.chartPlot?.addEventListener("pointermove", (event) => {
+    if (event.pointerType === "mouse" && event.buttons === 0) return;
+    showNearestChartPoint(event.clientX);
+  });
+
+  ui.chartPlot?.addEventListener("mousemove", (event) => {
+    showNearestChartPoint(event.clientX);
+  });
+
+  ui.chartPlot?.addEventListener("mouseleave", () => {
+    hideChartTooltip();
+  });
+
+  ui.chartPlot?.addEventListener("click", (event) => {
+    showNearestChartPoint(event.clientX);
   });
 
   ui.navToggle?.addEventListener("click", (event) => {
